@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# 型チェックに失敗したらコミット中断
+pnpm tsc || exit 1
+
+# ステージされたファイルに対してのみ整形/修正を実施し再ステージ
+pnpm lint-staged
+
+status=$?
+if [ $status -eq 0 ]; then
+  echo "[pre-commit] success."
+else
+  echo "[pre-commit] found error status."
+  exit 1
+fi
