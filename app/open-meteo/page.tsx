@@ -3,8 +3,15 @@ import { useCallback, useMemo, useState } from 'react';
 import { useGeolocation } from '../hooks/useGeolocation';
 import WeatherThreeScene from '../components/WeatherThreeScene';
 import { normalizeTempC } from '../lib/normalize';
+import { weathercodeToJa } from '../lib/weathercode';
 
-type Row = { time: string; temperature_2m: number };
+type Row = {
+  time: string;
+  temperature_2m: number;
+  weathercode?: number;
+  precipitation?: number;
+  cloudcover?: number;
+};
 
 export default function OpenMeteoPage() {
   const [lat, setLat] = useState<string>('35.6762'); // Tokyo
@@ -31,10 +38,25 @@ export default function OpenMeteoPage() {
       const data = await res.json();
       const times: string[] = data?.hourly?.time ?? [];
       const temps: number[] = data?.hourly?.temperature_2m ?? [];
-      const len = Math.min(times.length, temps.length);
+      const wcodes: number[] = data?.hourly?.weathercode ?? [];
+      const precs: number[] = data?.hourly?.precipitation ?? [];
+      const clouds: number[] = data?.hourly?.cloudcover ?? [];
+      const len = Math.min(
+        times.length,
+        temps.length || Number.POSITIVE_INFINITY,
+        wcodes.length || Number.POSITIVE_INFINITY,
+        precs.length || Number.POSITIVE_INFINITY,
+        clouds.length || Number.POSITIVE_INFINITY,
+      );
       const out: Row[] = [];
       for (let i = 0; i < Math.min(len, 8); i++) {
-        out.push({ time: times[i], temperature_2m: temps[i] });
+        out.push({
+          time: times[i],
+          temperature_2m: temps[i],
+          weathercode: wcodes[i],
+          precipitation: precs[i],
+          cloudcover: clouds[i],
+        });
       }
       setRows(out);
     } catch (e: unknown) {
@@ -102,6 +124,9 @@ export default function OpenMeteoPage() {
             <tr>
               <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>time</th>
               <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>temperature_2m (°C)</th>
+              <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>weathercode</th>
+              <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>precipitation (mm)</th>
+              <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>cloudcover (%)</th>
             </tr>
           </thead>
           <tbody>
@@ -109,6 +134,11 @@ export default function OpenMeteoPage() {
               <tr key={r.time}>
                 <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.time}</td>
                 <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.temperature_2m}</td>
+                <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>
+                  {r.weathercode} {typeof r.weathercode === 'number' ? `(${weathercodeToJa(r.weathercode)})` : ''}
+                </td>
+                <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.precipitation ?? ''}</td>
+                <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.cloudcover ?? ''}</td>
               </tr>
             ))}
           </tbody>
@@ -123,6 +153,11 @@ export default function OpenMeteoPage() {
             <>
               {' '}
               正規化温度: <code>{temp01.toFixed(3)}</code>
+            </>
+          )}
+          {rows?.[0]?.weathercode != null && (
+            <>
+              {' '}| 天気: <code>{weathercodeToJa(rows[0].weathercode!)}</code>
             </>
           )}
         </p>
