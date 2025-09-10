@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const url = new URL('https://api.open-meteo.com/v1/jma');
   url.searchParams.set('latitude', String(latitude));
   url.searchParams.set('longitude', String(longitude));
-  url.searchParams.set('hourly', 'temperature_2m');
+  url.searchParams.set('hourly', 'temperature_2m,weathercode,precipitation,cloudcover');
   url.searchParams.set('timezone', 'auto');
 
   const res = await fetch(url.toString());
