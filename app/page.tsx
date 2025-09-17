@@ -17,6 +17,12 @@ export default function Home() {
           <a className="secondary" href="/three">
             Three.js デモを見る
           </a>
+          <a className="secondary" href="/open-meteo">
+            Open-Meteo データ確認
+          </a>
+          <a className="secondary" href="/fbo-example">
+            FBO シェーダ例
+          </a>
           <a className="secondary" href="https://nextjs.org/docs" target="_blank" rel="noreferrer">
             Next.js ドキュメント
           </a>

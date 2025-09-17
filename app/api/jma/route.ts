@@ -13,10 +13,14 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const url = new URL('https://api.open-meteo.com/v1/jma');
+  // JMA モデルでは降水確率が取得できないため forecast API を利用する
+  const url = new URL('https://api.open-meteo.com/v1/forecast');
   url.searchParams.set('latitude', String(latitude));
   url.searchParams.set('longitude', String(longitude));
-  url.searchParams.set('hourly', 'temperature_2m,weathercode,precipitation,cloudcover');
+  url.searchParams.set(
+    'hourly',
+    'temperature_2m,weathercode,precipitation_probability,windspeed_10m',
+  );
   url.searchParams.set('timezone', 'auto');
 
   const res = await fetch(url.toString());

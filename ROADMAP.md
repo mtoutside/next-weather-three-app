@@ -11,7 +11,7 @@
   - フック: `useShaderFBOTexture`、例ページ: `/fbo-example`
 - Weather（天気）拡張の土台
   - `weathercode` の日本語化（`weathercodeToJa`）
-  - Open-Meteo（JMA）から `weathercode / temperature_2m / precipitation_probability / windspeed_10m` を取得しUIで可視化する実験ページ（`/open-meteo`）
+- Open-Meteo（forecast API）から `weathercode / temperature_2m / precipitation_probability / windspeed_10m` を取得しUIで可視化する実験ページ（`/open-meteo`）
   - APIルートでURL生成を `buildJmaUrlWithFields` に一元化（非破壊リファクタ）
 - TDD/テストの整備
   - `normalize`, `useGeolocation`, `jma`（URL/取得/正規化）, `weathercode`, `fbm`（構造）, FBOヘルパ（`createFbmUniforms/smoothFollow/getFboSize`）のテスト
@@ -37,7 +37,7 @@
 8. **開発・デバッグ**: モックデータやGUIを活用してパラメータの確認や調整を行う。
 
 ## Open-Meteo 連携要件の整理
-- **取得対象**: `weathercode`（天気）、`temperature_2m`（気温）、`precipitation_probability`（降水確率）、`windspeed_10m`（風速）を最低限取得する。
+- **取得対象**: `weathercode`（天気）、`temperature_2m`（気温）、`precipitation_probability`（降水確率）、`windspeed_10m`（風速）を最低限取得する。降水確率は JMA モデルでは提供されないため、Open-Meteo の `/v1/forecast` エンドポイントを使用する。
 - **シェーダ連携**: 上記の値を正規化し `uniform` としてシェーダへ送信。風速は流体・ノイズの速度、降水確率はエフェクト密度、気温は色味などに利用する。
 - **画面表示**: 気温・降水確率を UI に表示し、天気コードに応じたアイコン（例: 晴れ=太陽、雨=雨雲）をシンプルなスタイルで配置する。風速は当面シェーダ内表現に注力し UI 表示は保留。
 - **UI ポリシー**: 三要素（アイコン・気温・降水確率）を視認性重視で最小限の装飾に留める。レイアウトやタイポグラフィは余白とコントラストを活かし「こざっぱり」した印象を維持する。

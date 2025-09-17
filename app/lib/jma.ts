@@ -5,7 +5,8 @@ export type HourlyTemperature = {
 
 export function buildJmaUrl(params: { latitude: number; longitude: number }) {
   const { latitude, longitude } = params;
-  const url = new URL('https://api.open-meteo.com/v1/jma');
+  // /v1/jma では降水確率が提供されないため forecast API を利用する
+  const url = new URL('https://api.open-meteo.com/v1/forecast');
   url.searchParams.set('latitude', latitude.toString());
   url.searchParams.set('longitude', longitude.toString());
   url.searchParams.set('hourly', 'temperature_2m');
@@ -42,7 +43,7 @@ export function buildJmaUrlWithFields(params: {
   hourly: string[];
 }) {
   const { latitude, longitude, hourly } = params;
-  const url = new URL('https://api.open-meteo.com/v1/jma');
+  const url = new URL('https://api.open-meteo.com/v1/forecast');
   url.searchParams.set('latitude', latitude.toString());
   url.searchParams.set('longitude', longitude.toString());
   url.searchParams.set('hourly', hourly.join(','));
@@ -54,8 +55,8 @@ export type HourlyWeather = {
   time: string;
   temperature_2m?: number;
   weathercode?: number;
-  precipitation?: number;
-  cloudcover?: number;
+  precipitation_probability?: number;
+  windspeed_10m?: number;
 };
 
 export async function fetchJmaHourlyWeather(params: {
@@ -65,7 +66,7 @@ export async function fetchJmaHourlyWeather(params: {
   const url = buildJmaUrlWithFields({
     latitude: params.latitude,
     longitude: params.longitude,
-    hourly: ['temperature_2m', 'weathercode', 'precipitation', 'cloudcover'],
+    hourly: ['temperature_2m', 'weathercode', 'precipitation_probability', 'windspeed_10m'],
   });
   const res = await fetch(url);
   if (!res.ok) throw new Error(`JMA API request failed: ${res.status}`);
@@ -74,21 +75,21 @@ export async function fetchJmaHourlyWeather(params: {
       time?: string[];
       temperature_2m?: number[];
       weathercode?: number[];
-      precipitation?: number[];
-      cloudcover?: number[];
+      precipitation_probability?: number[];
+      windspeed_10m?: number[];
     };
   };
   const times = data.hourly?.time ?? [];
   const t = data.hourly?.temperature_2m ?? [];
   const w = data.hourly?.weathercode ?? [];
-  const p = data.hourly?.precipitation ?? [];
-  const c = data.hourly?.cloudcover ?? [];
+  const p = data.hourly?.precipitation_probability ?? [];
+  const ws = data.hourly?.windspeed_10m ?? [];
   // 欠損フィールドは長さ制約に含めず、存在する配列の最短に合わせる
   const lengths: number[] = [times.length];
   if (t.length) lengths.push(t.length);
   if (w.length) lengths.push(w.length);
   if (p.length) lengths.push(p.length);
-  if (c.length) lengths.push(c.length);
+  if (ws.length) lengths.push(ws.length);
   const len = Math.min(...lengths);
   const out: HourlyWeather[] = [];
   for (let i = 0; i < len; i++) {
@@ -96,8 +97,8 @@ export async function fetchJmaHourlyWeather(params: {
       time: times[i],
       temperature_2m: t[i],
       weathercode: w[i],
-      precipitation: p[i],
-      cloudcover: c[i],
+      precipitation_probability: p[i],
+      windspeed_10m: ws[i],
     });
   }
   return out;

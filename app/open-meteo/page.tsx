@@ -9,8 +9,8 @@ type Row = {
   time: string;
   temperature_2m: number;
   weathercode?: number;
-  precipitation?: number;
-  cloudcover?: number;
+  precipitation_probability?: number;
+  windspeed_10m?: number;
 };
 
 export default function OpenMeteoPage() {
@@ -39,14 +39,14 @@ export default function OpenMeteoPage() {
       const times: string[] = data?.hourly?.time ?? [];
       const temps: number[] = data?.hourly?.temperature_2m ?? [];
       const wcodes: number[] = data?.hourly?.weathercode ?? [];
-      const precs: number[] = data?.hourly?.precipitation ?? [];
-      const clouds: number[] = data?.hourly?.cloudcover ?? [];
+      const probs: number[] = data?.hourly?.precipitation_probability ?? [];
+      const winds: number[] = data?.hourly?.windspeed_10m ?? [];
       const len = Math.min(
         times.length,
         temps.length || Number.POSITIVE_INFINITY,
         wcodes.length || Number.POSITIVE_INFINITY,
-        precs.length || Number.POSITIVE_INFINITY,
-        clouds.length || Number.POSITIVE_INFINITY,
+        probs.length || Number.POSITIVE_INFINITY,
+        winds.length || Number.POSITIVE_INFINITY,
       );
       const out: Row[] = [];
       for (let i = 0; i < Math.min(len, 8); i++) {
@@ -54,8 +54,8 @@ export default function OpenMeteoPage() {
           time: times[i],
           temperature_2m: temps[i],
           weathercode: wcodes[i],
-          precipitation: precs[i],
-          cloudcover: clouds[i],
+          precipitation_probability: probs[i],
+          windspeed_10m: winds[i],
         });
       }
       setRows(out);
@@ -68,7 +68,7 @@ export default function OpenMeteoPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Open-Meteo JMA API 動作確認</h1>
+      <h1>Open-Meteo Forecast API 動作確認</h1>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <label>
           lat:
@@ -125,8 +125,10 @@ export default function OpenMeteoPage() {
               <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>time</th>
               <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>temperature_2m (°C)</th>
               <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>weathercode</th>
-              <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>precipitation (mm)</th>
-              <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>cloudcover (%)</th>
+              <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>
+                precipitation_probability (%)
+              </th>
+              <th style={{ border: '1px solid #ccc', padding: '4px 8px' }}>windspeed_10m (m/s)</th>
             </tr>
           </thead>
           <tbody>
@@ -135,10 +137,15 @@ export default function OpenMeteoPage() {
                 <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.time}</td>
                 <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.temperature_2m}</td>
                 <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>
-                  {r.weathercode} {typeof r.weathercode === 'number' ? `(${weathercodeToJa(r.weathercode)})` : ''}
+                  {r.weathercode}{' '}
+                  {typeof r.weathercode === 'number' ? `(${weathercodeToJa(r.weathercode)})` : ''}
                 </td>
-                <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.precipitation ?? ''}</td>
-                <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{r.cloudcover ?? ''}</td>
+                <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>
+                  {r.precipitation_probability ?? ''}
+                </td>
+                <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>
+                  {r.windspeed_10m ?? ''}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -157,7 +164,8 @@ export default function OpenMeteoPage() {
           )}
           {rows?.[0]?.weathercode != null && (
             <>
-              {' '}| 天気: <code>{weathercodeToJa(rows[0].weathercode!)}</code>
+              {' '}
+              | 天気: <code>{weathercodeToJa(rows[0].weathercode!)}</code>
             </>
           )}
         </p>
