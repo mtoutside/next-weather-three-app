@@ -2,8 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useWeatherData } from './hooks/useWeatherData';
-import WeatherThreeScene from './components/WeatherThreeScene';
-import WeatherObject from './components/WeatherObject';
+import UnifiedWeatherScene from './components/UnifiedWeatherScene';
 import { weathercodeToJa } from './lib/weathercode';
 import styles from './page.module.css';
 
@@ -21,7 +20,7 @@ export default function WeatherApp() {
 
   return (
     <div className={styles.page} style={{ position: 'relative', minHeight: '100vh' }}>
-      {/* 背景シェーダ - 画面全体を覆う */}
+      {/* 統合背景シェーダ + 3Dオブジェクト - 画面全体を覆う */}
       <div
         style={{
           position: 'fixed',
@@ -32,10 +31,11 @@ export default function WeatherApp() {
           zIndex: -1,
         }}
       >
-        <WeatherThreeScene
+        <UnifiedWeatherScene
           temp01={weatherData?.temp01}
           precip01={weatherData?.precip01}
           wind01={weatherData?.wind01}
+          weathercode={weatherData?.weathercode}
         />
       </div>
 
@@ -241,48 +241,36 @@ export default function WeatherApp() {
           </section>
         )}
 
-        {/* 3Dオブジェクト表示セクション */}
-        <section style={{ marginBottom: '2rem' }}>
-          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            <h3
-              style={{
-                margin: '0 0 1rem 0',
-                color: 'white',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-              }}
-            >
-              天気に応じた3Dオブジェクト
-              {weatherData?.weathercode != null && (
+        {/* 天気ビジュアライゼーション情報 */}
+        {weatherData && (
+          <section style={{ marginBottom: '2rem' }}>
+            <div style={{ textAlign: 'center' }}>
+              <h3
+                style={{
+                  margin: '0 0 1rem 0',
+                  color: 'white',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                }}
+              >
+                リアルタイム天気ビジュアライゼーション
                 <small
                   style={{
                     display: 'block',
                     color: 'rgba(255,255,255,0.7)',
                     fontWeight: 400,
                     textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                    marginTop: '0.5rem',
                   }}
                 >
-                  (コード: {weatherData.weathercode})
+                  背景とオブジェクトが天気データに連動して変化します
+                  {weatherData?.weathercode != null && (
+                    <span> (天気コード: {weatherData.weathercode})</span>
+                  )}
                 </small>
-              )}
-            </h3>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              minHeight: '50vh',
-            }}
-          >
-            <div style={{ maxWidth: '600px', width: '100%' }}>
-              <WeatherObject
-                weathercode={weatherData?.weathercode}
-                temp01={weatherData?.temp01}
-                precip01={weatherData?.precip01}
-                wind01={weatherData?.wind01}
-              />
+              </h3>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* フッター・リンク */}
         <footer style={{ textAlign: 'center', padding: '2rem 0' }}>
