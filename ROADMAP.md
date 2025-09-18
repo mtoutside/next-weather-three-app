@@ -14,12 +14,20 @@
 - Open-Meteo（forecast API）から `weathercode / temperature_2m / precipitation_probability / windspeed_10m` を取得しUIで可視化する実験ページ（`/open-meteo`）
 - 降水確率・風速を `normalizePrecipProbability` / `normalizeWindSpeed` で正規化し、シェーダ uniform に反映（テスト済み）
   - APIルートでURL生成を `buildJmaUrlWithFields` に一元化（非破壊リファクタ）
+- **統合天気予報アプリの完全実装** ✅ **完了**
+  - `/` ページに統合天気予報アプリを構築（メインページ化）
+  - 天気データ一元管理カスタムフック（`useWeatherData`）
+  - 天気コード別3Dオブジェクト分岐ロジック（5パターン対応）
+  - 背景シェーダー + 3Dオブジェクトの統合Canvas実装（`UnifiedWeatherScene`）
+  - 深度バッファとレンダリング順序制御（renderOrder, depthTest制御）
+  - パフォーマンス最適化（React.memo, uniforms最適化, ライティングメモ化）
+  - 全画面背景シェーダー表示（150×100プレーン, FOV120度, 画面全体カバー）
 - TDD/テストの整備
   - `normalize`, `useGeolocation`, `jma`（URL/取得/正規化）, `weathercode`, `fbm`（構造）, FBOヘルパ（`createFbmUniforms/smoothFollow/getFboSize`）のテスト
 
 ## 今後の予定
 1. ~~**Open-Meteo 主要値の反映**: Open-Meteo から取得する「天気コード・気温・降水確率・風速」を shader uniform に接続し、温度や風の強弱、降水ステータスに応じたマテリアル変化を実装~~ ✅ **完了**
-2. **統合天気予報アプリの実装**: 現在分散している機能を統合し、完全な天気予報アプリを構築（詳細は下記「統合天気予報アプリの要件と実装計画」を参照）
+2. ~~**統合天気予報アプリの実装**: 現在分散している機能を統合し、完全な天気予報アプリを構築（詳細は下記「統合天気予報アプリの要件と実装計画」を参照）~~ ✅ **完了**
 3. **自動更新とキャッシュ**: ポーリング/フォーカス時再検証（SWR等）＋ブラウザ/サーバキャッシュ。APIリクエスト間隔・Stale-While-Revalidate の戦略を決定
 4. **API キーと環境変数の管理**: 他プロバイダ（OpenWeatherMap など）導入時に `.env` 管理、サーバ側での秘匿、型付け（`process.env`）
 5. **堅牢なエラーハンドリング**: リトライ（指数バックオフ）、オフライン検出とフォールバック、位置情報拒否時の入力補助UIを強化
