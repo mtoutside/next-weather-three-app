@@ -68,7 +68,7 @@ function ClearSphere3D({
   });
 
   return (
-    <mesh position={[0, 0, 2]} rotation={[0, 0, 0]} renderOrder={1}>
+    <mesh position={[0, 0, 5.5]} rotation={[0, 0, 0]} renderOrder={1}>
       <sphereGeometry args={[1.5, 32, 32]} />
       <meshStandardMaterial map={tex} roughness={0.3} metalness={0.1} />
     </mesh>
