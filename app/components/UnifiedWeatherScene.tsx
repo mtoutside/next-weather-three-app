@@ -10,6 +10,7 @@ import type { Group } from 'three';
 import RainShaderSphere from './RainShaderSphere';
 import CloudyShaderSphere from './CloudyShaderSphere';
 import SnowShaderTorusKnot from './SnowShaderTorusKnot';
+import ThunderShaderSphere from './ThunderShaderSphere';
 
 // 背景シェーダープレーン（深度書き込み無効）
 export function BackgroundShaderPlane({
@@ -85,50 +86,6 @@ function ClearSphere3D({
   );
 }
 
-function ThunderSpire3D({
-  precip01 = 0,
-  wind01 = 0,
-}: {
-  temp01?: number;
-  precip01?: number;
-  wind01?: number;
-}) {
-  const groupRef = useRef<Group>(null);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    const intensity = 0.6 + (precip01 ?? 0) * 0.8;
-    groupRef.current.rotation.y += (0.4 + (wind01 ?? 0) * 0.5) * delta;
-    groupRef.current.children.forEach((child, index) => {
-      const phase = (index + 1) * 0.5;
-      child.scale.setScalar(1 + Math.sin(performance.now() * 0.002 + phase) * 0.1 * intensity);
-    });
-  });
-
-  return (
-    <group ref={groupRef} position={[0, 0, 5]} renderOrder={2}>
-      <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.1, 0.4, 3, 16, 1, true]} />
-        <meshStandardMaterial
-          color="#ffe066"
-          emissive="#ffd26f"
-          emissiveIntensity={1 + (precip01 ?? 0) * 1.5}
-          transparent
-          opacity={0.85}
-        />
-      </mesh>
-      <mesh position={[0, 1.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.6, 0.08, 16, 64]} />
-        <meshStandardMaterial color="#a47de5" emissive="#805ad5" emissiveIntensity={0.6} />
-      </mesh>
-      <mesh position={[0, -1.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.6, 0.08, 16, 64]} />
-        <meshStandardMaterial color="#805ad5" emissive="#5b46a3" emissiveIntensity={0.6} />
-      </mesh>
-    </group>
-  );
-}
-
 // 天気に応じた3Dオブジェクト選択（メモ化）
 const Weather3DObject = React.memo(function Weather3DObject({
   weathercode,
@@ -160,7 +117,7 @@ const Weather3DObject = React.memo(function Weather3DObject({
   }
 
   if (kind === 'thunder') {
-    return <ThunderSpire3D temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <ThunderShaderSphere temp01={temp01} precip01={precip01} wind01={wind01} />;
   }
 
   return null;

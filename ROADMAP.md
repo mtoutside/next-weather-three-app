@@ -49,7 +49,7 @@
    - ✅ Cloudy: SphereGeometry を波・渦ノイズでうねらせた曇天シェーダを実装
    - ✅ Rain: SphereGeometry にシェーダ（simplex fbm + ripple）で雨雲・波紋表現を実装
    - ✅ Snow: TorusKnotGeometry + 波シェーダで結晶風トポロジを表現
-   - ☐ Thunder: 球体を尖らせる変調
+   - ✅ Thunder: 雨球体シェーダに雷揺れ・フラッシュを重畳
 
 ## 現在地の天気予報をシェーダに反映する実装方針
 1. **位置情報の取得**: `navigator.geolocation` で緯度・経度を取得し、利用不可の場合はIPベースの位置情報APIを検討する。
