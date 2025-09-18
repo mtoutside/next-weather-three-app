@@ -1,49 +1,16 @@
 export const snowVertexShader = /* glsl */ `
   precision highp float;
 
-  uniform float uTime;
-  uniform float uWaveFreq;
-  uniform float uWaveAmp;
-  uniform float uSwirlSpeed;
-
   varying float vWave;
   varying vec3 vWorldPosition;
   varying vec3 vNormal;
 
-  vec3 rotateAxis(vec3 p, float angle, vec3 axis) {
-    vec3 a = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float r = 1.0 - c;
-    mat3 m = mat3(
-      a.x * a.x * r + c,
-      a.y * a.x * r + a.z * s,
-      a.z * a.x * r - a.y * s,
-      a.x * a.y * r - a.z * s,
-      a.y * a.y * r + c,
-      a.z * a.y * r + a.x * s,
-      a.x * a.z * r + a.y * s,
-      a.y * a.z * r - a.x * s,
-      a.z * a.z * r + c
-    );
-    return m * p;
-  }
-
   void main() {
-    vec3 transformedNormal = normalize(normalMatrix * normal);
-    float swirl = uSwirlSpeed * uTime * 0.2;
-    vec3 rotated = rotateAxis(position, swirl, vec3(0.0, 1.0, 0.0));
-
-    float wave = sin((rotated.x + rotated.y + rotated.z) * uWaveFreq + uTime * 0.8) * uWaveAmp;
-    vec3 displaced = rotated + transformedNormal * wave;
-
-    vWave = wave;
-    vNormal = normalize(normalMatrix * transformedNormal);
-
-    vec4 worldPosition = modelMatrix * vec4(displaced, 1.0);
+    vWave = 0.0;
+    vNormal = normalize(normalMatrix * normal);
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldPosition = worldPosition.xyz;
-
-    vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
