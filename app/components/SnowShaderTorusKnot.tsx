@@ -13,7 +13,7 @@ export type SnowShaderTorusKnotProps = {
   wind01?: number;
 };
 
-const BASE_COLOR = new ThreeColor('#dbe8ff');
+const BASE_COLOR = new ThreeColor('#6f747d');
 const HIGHLIGHT_COLOR = new ThreeColor('#ffffff');
 
 export default function SnowShaderTorusKnot({
@@ -26,12 +26,8 @@ export default function SnowShaderTorusKnot({
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uWaveFreq: { value: 1 },
-      uWaveAmp: { value: 0.2 },
-      uSwirlSpeed: { value: 0.6 },
-      uFogStrength: { value: 0.4 },
-      uHighlightMix: { value: 0.5 },
-      uOpacity: { value: 0.8 },
+      uBlizzardFactor: { value: 0.2 },
+      uSnowflakeAmount: { value: 120 },
       uBaseColor: { value: BASE_COLOR.clone() },
       uHighlightColor: { value: HIGHLIGHT_COLOR.clone() },
     }),
@@ -43,37 +39,27 @@ export default function SnowShaderTorusKnot({
     if (!mat) return;
 
     const factors = computeSnowFactors({ temp01, precip01, wind01 });
-    const lerpSpeed = Math.min(delta * 2.8, 1.0);
+    const lerpSpeed = Math.min(delta * 2.5, 1.0);
 
     uniforms.uTime.value += delta;
-    uniforms.uWaveFreq.value = MathUtils.lerp(
-      uniforms.uWaveFreq.value,
-      factors.waveFreq,
+    uniforms.uBlizzardFactor.value = MathUtils.lerp(
+      uniforms.uBlizzardFactor.value,
+      factors.blizzardFactor,
       lerpSpeed,
     );
-    uniforms.uWaveAmp.value = MathUtils.lerp(uniforms.uWaveAmp.value, factors.waveAmp, lerpSpeed);
-    uniforms.uSwirlSpeed.value = MathUtils.lerp(
-      uniforms.uSwirlSpeed.value,
-      factors.swirlSpeed,
+    uniforms.uSnowflakeAmount.value = MathUtils.lerp(
+      uniforms.uSnowflakeAmount.value,
+      factors.snowflakeAmount,
       lerpSpeed,
     );
-    uniforms.uFogStrength.value = MathUtils.lerp(
-      uniforms.uFogStrength.value,
-      factors.fogStrength,
-      lerpSpeed,
-    );
-    uniforms.uHighlightMix.value = MathUtils.lerp(
-      uniforms.uHighlightMix.value,
-      factors.highlightMix,
-      lerpSpeed,
-    );
-    uniforms.uOpacity.value = MathUtils.lerp(uniforms.uOpacity.value, factors.opacity, lerpSpeed);
 
     const baseColor = uniforms.uBaseColor.value as Color;
-    baseColor.setHSL(0.6, 0.15 + precip01 * 0.1, 0.88 - precip01 * 0.15);
+    baseColor.setHSL(0.6, factors.baseSaturation, factors.baseLightness);
 
     const highlightColor = uniforms.uHighlightColor.value as Color;
-    highlightColor.copy(baseColor).lerp(new ThreeColor('#ffffff'), 0.4 + (1 - temp01) * 0.3);
+    highlightColor
+      .copy(baseColor)
+      .lerp(new ThreeColor('#ffffff'), MathUtils.clamp(factors.highlightStrength, 0.0, 1.0));
 
     mat.needsUpdate = true;
   });

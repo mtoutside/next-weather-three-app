@@ -1,10 +1,9 @@
 export type SnowFactors = {
-  waveFreq: number;
-  waveAmp: number;
-  swirlSpeed: number;
-  fogStrength: number;
-  highlightMix: number;
-  opacity: number;
+  blizzardFactor: number;
+  snowflakeAmount: number;
+  baseSaturation: number;
+  baseLightness: number;
+  highlightStrength: number;
 };
 
 export type ComputeSnowFactorsParams = {
@@ -31,19 +30,17 @@ export function computeSnowFactors({
   const precip = clamp01(precip01);
   const wind = clamp01(wind01);
 
-  const waveFreq = 0.8 + wind * 0.6;
-  const waveAmp = 0.15 + precip * 0.35 + (1 - temp) * 0.2;
-  const swirlSpeed = 0.4 + wind * 1.2;
-  const fogStrength = 0.3 + precip * 0.5 + (1 - temp) * 0.2;
-  const highlightMix = 0.4 + (1 - temp) * 0.4;
-  const opacity = Math.min(0.65 + precip * 0.25 + (1 - temp) * 0.1, 1);
+  const blizzardFactor = 0.05 + wind * 0.4 + precip * 0.35;
+  const snowflakeAmount = 80 + precip * 100 + wind * 40;
+  const baseSaturation = 0.12 + precip * 0.1;
+  const baseLightness = 0.88 - precip * 0.15 - (1 - temp) * 0.05;
+  const highlightStrength = 0.35 + (1 - temp) * 0.35 + precip * 0.2;
 
   return {
-    waveFreq,
-    waveAmp,
-    swirlSpeed,
-    fogStrength,
-    highlightMix,
-    opacity,
+    blizzardFactor,
+    snowflakeAmount,
+    baseSaturation,
+    baseLightness,
+    highlightStrength,
   };
 }
