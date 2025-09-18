@@ -15,18 +15,15 @@ import ThunderShaderSphere from './ThunderShaderSphere';
 // 背景シェーダープレーン（深度書き込み無効）
 export function BackgroundShaderPlane({
   temp01 = 0.5,
-  precip01 = 0,
   wind01 = 0,
 }: {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 }) {
   const uniforms = useMemo(
     () =>
       createFbmUniforms({
         temp01: temp01 ?? 0.5,
-        precip01: precip01 ?? 0,
         wind01: wind01 ?? 0,
       }),
     [], // 初期化時のみ作成
@@ -34,11 +31,9 @@ export function BackgroundShaderPlane({
 
   useFrame(({ clock }) => {
     const targetTemp = temp01 ?? 0.5;
-    const targetPrecip = precip01 ?? 0;
     const targetWind = wind01 ?? 0;
     uniforms.uTime.value = clock.elapsedTime;
     uniforms.uTemp.value = smoothFollow(uniforms.uTemp.value, targetTemp, 0.05);
-    uniforms.uPrecip.value = smoothFollow(uniforms.uPrecip.value, targetPrecip, 0.1);
     uniforms.uWind.value = smoothFollow(uniforms.uWind.value, targetWind, 0.08);
   });
 
@@ -58,16 +53,8 @@ export function BackgroundShaderPlane({
 }
 
 // クリアスフィア（晴れ・快晴用）
-function ClearSphere3D({
-  temp01 = 0.5,
-  precip01 = 0,
-  wind01 = 0,
-}: {
-  temp01?: number;
-  precip01?: number;
-  wind01?: number;
-}) {
-  const tex = useShaderFBOTexture({ temp01, precip01, wind01, base: 256, max: 512 });
+function ClearSphere3D({ temp01 = 0.5, wind01 = 0 }: { temp01?: number; wind01?: number }) {
+  const tex = useShaderFBOTexture({ temp01, wind01, base: 256, max: 512 });
   const groupRef = useRef<Group>(null);
 
   useFrame((_, delta) => {
@@ -90,34 +77,32 @@ function ClearSphere3D({
 const Weather3DObject = React.memo(function Weather3DObject({
   weathercode,
   temp01,
-  precip01,
   wind01,
 }: {
   weathercode?: number;
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 }) {
   const kind = resolveWeatherObjectKind(weathercode);
 
   if (kind === 'clear') {
-    return <ClearSphere3D temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <ClearSphere3D temp01={temp01} wind01={wind01} />;
   }
 
   if (kind === 'cloudy') {
-    return <CloudyShaderSphere temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <CloudyShaderSphere temp01={temp01} wind01={wind01} />;
   }
 
   if (kind === 'rain') {
-    return <RainShaderSphere temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <RainShaderSphere temp01={temp01} wind01={wind01} />;
   }
 
   if (kind === 'snow') {
-    return <SnowShaderTorusKnot temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <SnowShaderTorusKnot temp01={temp01} wind01={wind01} />;
   }
 
   if (kind === 'thunder') {
-    return <ThunderShaderSphere temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <ThunderShaderSphere temp01={temp01} wind01={wind01} />;
   }
 
   return null;
@@ -126,7 +111,7 @@ const Weather3DObject = React.memo(function Weather3DObject({
 // メイン統合コンポーネント
 export default function UnifiedWeatherScene({
   temp01,
-  precip01,
+  precip01: _precip01,
   wind01,
   weathercode,
 }: {
@@ -165,15 +150,10 @@ export default function UnifiedWeatherScene({
         {lights}
 
         {/* 背景シェーダー（最背面） */}
-        <BackgroundShaderPlane temp01={temp01} precip01={precip01} wind01={wind01} />
+        <BackgroundShaderPlane temp01={temp01} wind01={wind01} />
 
         {/* 天気に応じた3Dオブジェクト（前面） */}
-        <Weather3DObject
-          weathercode={weathercode}
-          temp01={temp01}
-          precip01={precip01}
-          wind01={wind01}
-        />
+        <Weather3DObject weathercode={weathercode} temp01={temp01} wind01={wind01} />
       </Canvas>
     </div>
   );

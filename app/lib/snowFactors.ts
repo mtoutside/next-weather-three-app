@@ -8,7 +8,6 @@ export type SnowFactors = {
 
 export type ComputeSnowFactorsParams = {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 };
 
@@ -23,18 +22,16 @@ function clamp01(value: number | undefined): number {
 
 export function computeSnowFactors({
   temp01 = 0.5,
-  precip01 = 0,
   wind01 = 0,
 }: ComputeSnowFactorsParams): SnowFactors {
   const temp = clamp01(temp01);
-  const precip = clamp01(precip01);
   const wind = clamp01(wind01);
 
-  const blizzardFactor = 0.05 + wind * 0.4 + precip * 0.35;
-  const snowflakeAmount = 80 + precip * 100 + wind * 40;
-  const baseSaturation = 0.12 + precip * 0.1;
-  const baseLightness = 0.88 - precip * 0.15 - (1 - temp) * 0.05;
-  const highlightStrength = 0.35 + (1 - temp) * 0.35 + precip * 0.2;
+  const blizzardFactor = 0.05 + wind * 0.4;
+  const snowflakeAmount = Math.min(200, 80 + wind * 60);
+  const baseSaturation = 0.12 + wind * 0.08;
+  const baseLightness = 0.88 - (1 - temp) * 0.05;
+  const highlightStrength = 0.35 + (1 - temp) * 0.35;
 
   return {
     blizzardFactor,

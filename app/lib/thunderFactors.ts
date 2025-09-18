@@ -6,7 +6,6 @@ export type ThunderFactors = {
 };
 
 export type ComputeThunderFactorsParams = {
-  precip01?: number;
   wind01?: number;
 };
 
@@ -19,11 +18,7 @@ function clamp01(value: number | undefined): number {
   return value;
 }
 
-export function computeThunderFactors({
-  precip01 = 0,
-  wind01 = 0,
-}: ComputeThunderFactorsParams): ThunderFactors {
-  const precip = clamp01(precip01);
+export function computeThunderFactors({ wind01 = 0 }: ComputeThunderFactorsParams): ThunderFactors {
   const wind = clamp01(wind01);
 
   const jitterFreq = {
@@ -31,14 +26,14 @@ export function computeThunderFactors({
     y: 90 + wind * 45,
   };
   const jitterPhase = {
-    x: 1.2 + precip * 1.8,
+    x: 1.2,
     y: 0.8 + wind * 1.2,
   };
   const jitterScale = {
-    x: 0.004 + precip * 0.01 + wind * 0.004,
-    y: 0.004 + precip * 0.008 + wind * 0.006,
+    x: 0.004 + wind * 0.006,
+    y: 0.004 + wind * 0.006,
   };
-  const flashIntensity = 0.3 + precip * 0.4 + wind * 0.3;
+  const flashIntensity = 0.3 + wind * 0.6;
 
   return {
     jitterFreq,

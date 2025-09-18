@@ -16,7 +16,6 @@ export default function WeatherApp() {
   // TweakPane用の調整可能パラメータ（初期値固定で無限再レンダーを防ぐ）
   const [tweakParams, setTweakParams] = useState({
     tempOverride: 0.5,
-    precipOverride: 0,
     windOverride: 0,
     weathercodeOverride: 0,
     useRealData: true, // 実データ使用フラグ
@@ -43,7 +42,7 @@ export default function WeatherApp() {
     }
     return {
       temp01: tweakParams.tempOverride,
-      precip01: tweakParams.precipOverride,
+      precip01: 0,
       wind01: tweakParams.windOverride,
       weathercode: tweakParams.weathercodeOverride,
     };

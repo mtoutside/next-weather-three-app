@@ -10,7 +10,6 @@ import { computeThunderFactors } from '../lib/thunderFactors';
 
 export type ThunderShaderSphereProps = {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 };
 
@@ -19,7 +18,6 @@ const HIGHLIGHT_COLOR = new ThreeColor('#f6f1d6');
 
 export default function ThunderShaderSphere({
   temp01 = 0.5,
-  precip01 = 0,
   wind01 = 0,
 }: ThunderShaderSphereProps) {
   const materialRef = useRef<ShaderMaterial>(null);
@@ -49,8 +47,8 @@ export default function ThunderShaderSphere({
     const mat = materialRef.current;
     if (!mat) return;
 
-    const rainFactors = computeRainFactors({ temp01, precip01, wind01 });
-    const thunderFactors = computeThunderFactors({ precip01, wind01 });
+    const rainFactors = computeRainFactors({ temp01, wind01 });
+    const thunderFactors = computeThunderFactors({ wind01 });
     const lerpSpeed = Math.min(delta * 3.5, 1.0);
 
     uniforms.uTime.value += delta * rainFactors.flowSpeed * 1.2;
@@ -114,7 +112,7 @@ export default function ThunderShaderSphere({
     );
 
     const baseColor = uniforms.uBaseColor.value as Color;
-    baseColor.setHSL(0.58 - precip01 * 0.08, 0.35 + precip01 * 0.2, 0.45 + (1 - temp01) * 0.1);
+    baseColor.setHSL(0.58 - wind01 * 0.05, 0.35 + wind01 * 0.15, 0.45 + (1 - temp01) * 0.1);
 
     const highlightColor = uniforms.uHighlightColor.value as Color;
     highlightColor.copy(baseColor).lerp(new ThreeColor('#ffe9a8'), 0.6).offsetHSL(0.0, 0.05, 0.1);

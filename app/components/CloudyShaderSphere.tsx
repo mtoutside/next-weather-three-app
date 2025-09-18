@@ -9,18 +9,13 @@ import { computeCloudyFactors } from '../lib/cloudyFactors';
 
 export type CloudyShaderSphereProps = {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 };
 
 const BASE_COLOR = new ThreeColor('#d4dbea');
 const HIGHLIGHT_COLOR = new ThreeColor('#f5f8ff');
 
-export default function CloudyShaderSphere({
-  temp01 = 0.5,
-  precip01 = 0,
-  wind01 = 0,
-}: CloudyShaderSphereProps) {
+export default function CloudyShaderSphere({ temp01 = 0.5, wind01 = 0 }: CloudyShaderSphereProps) {
   const materialRef = useRef<ShaderMaterial>(null);
 
   const uniforms = useMemo(
@@ -42,7 +37,7 @@ export default function CloudyShaderSphere({
     const mat = materialRef.current;
     if (!mat) return;
 
-    const factors = computeCloudyFactors({ temp01, precip01, wind01 });
+    const factors = computeCloudyFactors({ temp01, wind01 });
     const lerpSpeed = Math.min(delta * 2.5, 1.0);
 
     uniforms.uTime.value += delta;
@@ -70,13 +65,10 @@ export default function CloudyShaderSphere({
     );
 
     const baseColor = uniforms.uBaseColor.value as Color;
-    baseColor.setHSL(0.6 - factors.hueShift * 0.5, 0.1 + precip01 * 0.1, 0.8 - precip01 * 0.1);
+    baseColor.setHSL(0.58 - factors.hueShift * 0.5, 0.1 + wind01 * 0.05, 0.8);
 
     const highlightColor = uniforms.uHighlightColor.value as Color;
-    highlightColor
-      .copy(baseColor)
-      .lerp(new ThreeColor('#ffffff'), 0.3 + precip01 * 0.2)
-      .offsetHSL(0, 0.02, 0.04);
+    highlightColor.copy(baseColor).lerp(new ThreeColor('#ffffff'), 0.3 + (1 - temp01) * 0.1);
 
     mat.needsUpdate = true;
   });

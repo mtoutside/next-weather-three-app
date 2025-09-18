@@ -10,7 +10,6 @@ export type RainFactors = {
 
 export type ComputeRainFactorsParams = {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 };
 
@@ -25,22 +24,20 @@ function clamp01(value: number | undefined): number {
 
 export function computeRainFactors({
   temp01 = 0.5,
-  precip01 = 0,
   wind01 = 0,
 }: ComputeRainFactorsParams): RainFactors {
   const temp = clamp01(temp01);
-  const precip = clamp01(precip01);
   const wind = clamp01(wind01);
 
   const coldness = 1 - temp;
 
-  const noiseScale = 0.7 + coldness * 0.8 + precip * 0.3;
-  const noiseStrength = 0.2 + precip * 0.45 + wind * 0.1;
-  const wobbleStrength = 0.04 + wind * 0.15;
-  const flowSpeed = 0.35 + wind * 1.1 + precip * 0.3;
-  const opacity = Math.min(0.55 + precip * 0.35 + coldness * 0.1, 1);
-  const highlightGain = 1.1 + precip * 0.3;
-  const rippleMix = 0.1 + precip * 0.7;
+  const noiseScale = 0.7 + coldness * 0.6;
+  const noiseStrength = 0.25 + wind * 0.15;
+  const wobbleStrength = 0.06 + wind * 0.12;
+  const flowSpeed = 0.45 + wind * 1.0;
+  const opacity = Math.min(0.6 + coldness * 0.15, 1);
+  const highlightGain = 1.0 + coldness * 0.2;
+  const rippleMix = 0.2 + wind * 0.5;
 
   return {
     noiseScale,

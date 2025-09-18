@@ -190,7 +190,7 @@ export default function OpenMeteoPage() {
             </>
           )}
         </p>
-        <WeatherThreeScene temp01={temp01} precip01={precip01} wind01={wind01} />
+        <WeatherThreeScene temp01={temp01} wind01={wind01} />
       </div>
     </div>
   );

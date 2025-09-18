@@ -9,7 +9,6 @@ import { computeSnowFactors } from '../lib/snowFactors';
 
 export type SnowShaderTorusKnotProps = {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 };
 
@@ -18,7 +17,6 @@ const HIGHLIGHT_COLOR = new ThreeColor('#ffffff');
 
 export default function SnowShaderTorusKnot({
   temp01 = 0.5,
-  precip01 = 0,
   wind01 = 0,
 }: SnowShaderTorusKnotProps) {
   const materialRef = useRef<ShaderMaterial>(null);
@@ -38,7 +36,7 @@ export default function SnowShaderTorusKnot({
     const mat = materialRef.current;
     if (!mat) return;
 
-    const factors = computeSnowFactors({ temp01, precip01, wind01 });
+    const factors = computeSnowFactors({ temp01, wind01 });
     const lerpSpeed = Math.min(delta * 2.5, 1.0);
 
     uniforms.uTime.value += delta;

@@ -11,8 +11,12 @@ export type WeatherObjectProps = {
 };
 
 // クリアスフィア（weathercode 0-1: 晴れ・快晴）
-function ClearSphere({ temp01, precip01, wind01 }: Omit<WeatherObjectProps, 'weathercode'>) {
-  return <MappedSphereFBO temp01={temp01} precip01={precip01} wind01={wind01} />;
+function ClearSphere({
+  temp01,
+  precip01: _precip,
+  wind01,
+}: Omit<WeatherObjectProps, 'weathercode'>) {
+  return <MappedSphereFBO temp01={temp01} wind01={wind01} />;
 }
 
 // レイヤーシェル（weathercode 2-4, 45, 48: 曇り・霧）

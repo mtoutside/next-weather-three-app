@@ -26,7 +26,7 @@
   - `normalize`, `useGeolocation`, `jma`（URL/取得/正規化）, `weathercode`, `fbm`（構造）, FBOヘルパ（`createFbmUniforms/smoothFollow/getFboSize`）のテスト
 - **TweakPaneデバッグツールの実装** ✅ **完了**
   - 統合天気予報アプリにTweakPaneデバッグパネルを追加
-  - 数値スライダー: `tempOverride`, `precipOverride`, `windOverride` (0-1範囲、0.01ステップ)
+  - 数値スライダー: `tempOverride`, `windOverride` (0-1範囲、0.01ステップ)
   - 天気コードセレクトボックス: `weathercodeOverride` (実際の天気コード値から選択)
   - 実データ/手動切り替えフラグ: `useRealData` (Boolean)
   - 天気コード選択肢の動的生成（`getWeathercodeOptions`）

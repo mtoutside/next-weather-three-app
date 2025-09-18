@@ -9,18 +9,13 @@ import { computeRainFactors } from '../lib/rainFactors';
 
 export type RainShaderSphereProps = {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 };
 
 const BASE_COLOR = new ThreeColor('#5d7aa5');
 const HIGHLIGHT_COLOR = new ThreeColor('#a8c4ef');
 
-export default function RainShaderSphere({
-  temp01 = 0.5,
-  precip01 = 0,
-  wind01 = 0,
-}: RainShaderSphereProps) {
+export default function RainShaderSphere({ temp01 = 0.5, wind01 = 0 }: RainShaderSphereProps) {
   const materialRef = useRef<ShaderMaterial>(null);
 
   const uniforms = useMemo(
@@ -44,7 +39,7 @@ export default function RainShaderSphere({
     const mat = materialRef.current;
     if (!mat) return;
 
-    const factors = computeRainFactors({ temp01, precip01, wind01 });
+    const factors = computeRainFactors({ temp01, wind01 });
     const lerpSpeed = Math.min(delta * 3.2, 1.0);
 
     uniforms.uTime.value += delta * factors.flowSpeed;
@@ -81,15 +76,15 @@ export default function RainShaderSphere({
     );
 
     const baseColor = uniforms.uBaseColor.value as Color;
-    const hue = MathUtils.lerp(0.58, 0.5, Math.min(precip01 + wind01 * 0.3, 1));
-    const saturation = 0.2 + precip01 * 0.25;
+    const hue = MathUtils.lerp(0.58, 0.5, Math.min(wind01 * 0.4, 1));
+    const saturation = 0.2 + wind01 * 0.15;
     const lightness = MathUtils.lerp(0.55, 0.7, Math.max(0.1, 1 - temp01 * 0.4));
     baseColor.setHSL(hue, saturation, lightness);
 
     const highlightColor = uniforms.uHighlightColor.value as Color;
     highlightColor
       .copy(baseColor)
-      .lerp(new ThreeColor('#d3e7ff'), 0.35 + precip01 * 0.3)
+      .lerp(new ThreeColor('#d3e7ff'), 0.35 + wind01 * 0.2)
       .offsetHSL(0, 0.02, 0.05);
 
     mat.needsUpdate = true;

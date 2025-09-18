@@ -2,12 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { computeSnowFactors } from './snowFactors';
 
 describe('computeSnowFactors', () => {
-  it('降水量が増えるとブリザード係数が増える', () => {
-    const light = computeSnowFactors({ precip01: 0.1 });
-    const heavy = computeSnowFactors({ precip01: 0.9 });
-    expect(heavy.blizzardFactor).toBeGreaterThan(light.blizzardFactor);
-  });
-
   it('風が強いほどブリザード係数が増える', () => {
     const calm = computeSnowFactors({ wind01: 0 });
     const windy = computeSnowFactors({ wind01: 1 });
@@ -21,7 +15,7 @@ describe('computeSnowFactors', () => {
   });
 
   it('結果が期待レンジに収まる', () => {
-    const factors = computeSnowFactors({ temp01: 0.5, precip01: 0.5, wind01: 0.5 });
+    const factors = computeSnowFactors({ temp01: 0.5, wind01: 0.5 });
     expect(factors.blizzardFactor).toBeGreaterThan(0);
     expect(factors.snowflakeAmount).toBeGreaterThan(0);
     expect(factors.baseLightness).toBeLessThanOrEqual(1);

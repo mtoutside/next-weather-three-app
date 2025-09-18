@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { useEffect, useMemo } from 'react';
 import { vertexShader, fragmentShader } from '../shaders/fbm';
 
-type WeatherUniformName = 'uTime' | 'uTemp' | 'uPrecip' | 'uWind';
+type WeatherUniformName = 'uTime' | 'uTemp' | 'uWind';
 export type WeatherUniforms = Record<WeatherUniformName, THREE.IUniform<number>>;
 
 function createUniform(value: number): THREE.IUniform<number> {
@@ -15,17 +15,14 @@ function createUniform(value: number): THREE.IUniform<number> {
 
 export function createFbmUniforms({
   temp01 = 0.5,
-  precip01 = 0,
   wind01 = 0,
 }: {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
 } = {}): WeatherUniforms {
   return {
     uTime: createUniform(0),
     uTemp: createUniform(temp01),
-    uPrecip: createUniform(precip01),
     uWind: createUniform(wind01),
   } satisfies WeatherUniforms;
 }
@@ -49,13 +46,11 @@ export function getFboSize({
 
 export function useShaderFBOTexture({
   temp01 = 0.5,
-  precip01 = 0,
   wind01 = 0,
   base = 512,
   max = 1024,
 }: {
   temp01?: number;
-  precip01?: number;
   wind01?: number;
   base?: number;
   max?: number;
@@ -73,10 +68,7 @@ export function useShaderFBOTexture({
   // 別シーンと直交カメラ
   const scene = useMemo(() => new THREE.Scene(), []);
   const cam = useMemo(() => new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), []);
-  const uniforms = useMemo(
-    () => createFbmUniforms({ temp01, precip01, wind01 }),
-    [temp01, precip01, wind01],
-  );
+  const uniforms = useMemo(() => createFbmUniforms({ temp01, wind01 }), [temp01, wind01]);
 
   useEffect(() => {
     fbo.texture.colorSpace = THREE.SRGBColorSpace;
@@ -98,7 +90,6 @@ export function useShaderFBOTexture({
     // uniform更新
     uniforms.uTime.value = clock.elapsedTime;
     uniforms.uTemp.value = smoothFollow(uniforms.uTemp.value, temp01, 0.05);
-    uniforms.uPrecip.value = smoothFollow(uniforms.uPrecip.value, precip01, 0.1);
     uniforms.uWind.value = smoothFollow(uniforms.uWind.value, wind01, 0.08);
     // レンダ
     gl.setRenderTarget(fbo);

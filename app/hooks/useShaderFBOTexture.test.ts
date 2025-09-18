@@ -3,17 +3,15 @@ import { createFbmUniforms, smoothFollow, getFboSize } from './useShaderFBOTextu
 
 describe('useShaderFBOTexture helpers', () => {
   it('createFbmUniforms は渡した初期値を保持する', () => {
-    const u = createFbmUniforms({ temp01: 0.3, precip01: 0.4, wind01: 0.2 });
+    const u = createFbmUniforms({ temp01: 0.3, wind01: 0.2 });
     expect(u.uTime.value).toBe(0);
     expect(u.uTemp.value).toBeCloseTo(0.3, 6);
-    expect(u.uPrecip.value).toBeCloseTo(0.4, 6);
     expect(u.uWind.value).toBeCloseTo(0.2, 6);
   });
 
-  it('createFbmUniforms は既定値を 0.5/0/0 で設定する', () => {
+  it('createFbmUniforms は既定値を 0.5/0 で設定する', () => {
     const u = createFbmUniforms();
     expect(u.uTemp.value).toBeCloseTo(0.5, 6);
-    expect(u.uPrecip.value).toBe(0);
     expect(u.uWind.value).toBe(0);
   });
 
