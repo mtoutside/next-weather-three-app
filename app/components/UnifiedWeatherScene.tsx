@@ -7,7 +7,7 @@ import { createFbmUniforms, smoothFollow } from '../hooks/useShaderFBOTexture';
 import { useShaderFBOTexture } from '../hooks/useShaderFBOTexture';
 import { resolveWeatherObjectKind } from '../lib/weatherObjectKind';
 import type { Group } from 'three';
-import CloudyShaderSphere from './CloudyShaderSphere';
+import RainShaderSphere from './RainShaderSphere';
 
 // 背景シェーダープレーン（深度書き込み無効）
 export function BackgroundShaderPlane({
@@ -83,7 +83,7 @@ function ClearSphere3D({
   );
 }
 
-function RainShower3D({
+function CloudLayer3D({
   precip01 = 0,
   wind01 = 0,
 }: {
@@ -92,34 +92,41 @@ function RainShower3D({
   wind01?: number;
 }) {
   const groupRef = useRef<Group>(null);
-  const drops = useMemo(() => {
-    const count = Math.floor(30 + (precip01 ?? 0) * 60);
-    return Array.from({ length: count }, (_, i) => ({
-      key: i,
-      position: [(Math.random() - 0.5) * 6, Math.random() * 3, 4.5 + Math.random() * 1.5] as [
-        number,
-        number,
-        number,
-      ],
-      length: 0.5 + (precip01 ?? 0) * 1.2,
-    }));
-  }, [precip01]);
+  const puffConfigs = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) => {
+        const spread = i - 3;
+        const scale = 0.7 + (precip01 ?? 0) * 0.7 + Math.random() * 0.2;
+        return {
+          key: i,
+          position: [spread * 0.75, Math.sin(i) * 0.22, 5.2 + Math.random() * 0.35] as [
+            number,
+            number,
+            number,
+          ],
+          scale,
+        };
+      }),
+    [precip01],
+  );
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-    groupRef.current.rotation.z = (wind01 ?? 0) * 0.3;
-    groupRef.current.position.y -= (0.5 + (precip01 ?? 0) * 1.2) * delta;
-    if (groupRef.current.position.y < -2) {
-      groupRef.current.position.y = 0;
-    }
+    groupRef.current.rotation.y += (0.04 + wind01 * 0.12) * delta;
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]} renderOrder={2}>
-      {drops.map(({ key, position, length }) => (
-        <mesh key={key} position={position}>
-          <cylinderGeometry args={[0.02, 0.02, length]} />
-          <meshBasicMaterial color="#64a4d6" transparent opacity={0.7} />
+    <group ref={groupRef} position={[0, 0.25, 0]} renderOrder={1}>
+      {puffConfigs.map(({ key, position, scale }) => (
+        <mesh key={key} position={position} scale={[scale, scale * 0.72, scale]}>
+          <sphereGeometry args={[1.1, 32, 32]} />
+          <meshStandardMaterial
+            color="#d6dde9"
+            roughness={0.96}
+            metalness={0.04}
+            transparent
+            opacity={0.78 - (precip01 ?? 0) * 0.25}
+          />
         </mesh>
       ))}
     </group>
@@ -230,11 +237,11 @@ const Weather3DObject = React.memo(function Weather3DObject({
   }
 
   if (kind === 'cloudy') {
-    return <CloudyShaderSphere temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <CloudLayer3D temp01={temp01} precip01={precip01} wind01={wind01} />;
   }
 
   if (kind === 'rain') {
-    return <RainShower3D temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <RainShaderSphere temp01={temp01} precip01={precip01} wind01={wind01} />;
   }
 
   if (kind === 'snow') {

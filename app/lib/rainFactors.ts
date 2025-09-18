@@ -1,14 +1,14 @@
-export type CloudyFactors = {
+export type RainFactors = {
   noiseScale: number;
   noiseStrength: number;
   wobbleStrength: number;
   flowSpeed: number;
   opacity: number;
   highlightGain: number;
-  shadowStrength: number;
+  rippleMix: number;
 };
 
-export type ComputeCloudyFactorsParams = {
+export type ComputeRainFactorsParams = {
   temp01?: number;
   precip01?: number;
   wind01?: number;
@@ -23,32 +23,32 @@ function clamp01(value: number | undefined): number {
   return value;
 }
 
-export function computeCloudyFactors({
+export function computeRainFactors({
   temp01 = 0.5,
   precip01 = 0,
   wind01 = 0,
-}: ComputeCloudyFactorsParams): CloudyFactors {
+}: ComputeRainFactorsParams): RainFactors {
   const temp = clamp01(temp01);
   const precip = clamp01(precip01);
   const wind = clamp01(wind01);
 
-  const invTemp = 1 - temp;
+  const coldness = 1 - temp;
 
-  const noiseScale = 0.8 + invTemp * 0.9; // 寒いほど雲が広がる
-  const noiseStrength = 0.18 + precip * 0.28 + invTemp * 0.05;
-  const wobbleStrength = 0.05 + wind * 0.12;
-  const flowSpeed = 0.25 + wind * 0.9;
-  const opacity = 0.6 + precip * 0.25 + invTemp * 0.05;
-  const highlightGain = 1.0 + invTemp * 0.35;
-  const shadowStrength = 0.18 + precip * 0.25;
+  const noiseScale = 0.7 + coldness * 0.8 + precip * 0.3; // 雨雲の層を広げる
+  const noiseStrength = 0.2 + precip * 0.45 + wind * 0.1;
+  const wobbleStrength = 0.04 + wind * 0.15;
+  const flowSpeed = 0.35 + wind * 1.1 + precip * 0.3;
+  const opacity = Math.min(0.55 + precip * 0.35 + coldness * 0.1, 1);
+  const highlightGain = 1.1 + precip * 0.3;
+  const rippleMix = 0.1 + precip * 0.7;
 
   return {
     noiseScale,
     noiseStrength,
     wobbleStrength,
     flowSpeed,
-    opacity: Math.min(opacity, 1),
+    opacity,
     highlightGain,
-    shadowStrength,
+    rippleMix,
   };
 }

@@ -46,8 +46,8 @@
 10. **API設計の方針**: 現状 `/api/jma` は上流の生JSON互換を維持。正規化配列を返す新エンドポイントは要件が固まってから（バージョン/別パス）
 11. **天気オブジェクトの球体シェーダ統一**: weathercode ごとに単一の `SphereGeometry` にシェーダ変調で表情付けする再設計
    - ✅ Clear: 既存の `MappedSphereFBO` により球体ベースの表現が成立
-   - ✅ Cloudy: SphereGeometry にシェーダ変調 (simplex fbm) でメタボール表現を実装
-   - ☐ Rain: 波紋・うねりを付与
+   - ☐ Cloudy: Sphere をノイズ変調してメタボール風にする
+   - ✅ Rain: SphereGeometry にシェーダ（simplex fbm + ripple）で雨雲・波紋表現を実装
    - ☐ Snow: 球体を柔らかくたわませる
    - ☐ Thunder: 球体を尖らせる変調
 

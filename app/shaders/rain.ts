@@ -1,4 +1,4 @@
-export const cloudyVertexShader = /* glsl */ `
+export const rainVertexShader = /* glsl */ `
   precision highp float;
 
   uniform float uTime;
@@ -6,8 +6,10 @@ export const cloudyVertexShader = /* glsl */ `
   uniform float uNoiseStrength;
   uniform float uWobbleStrength;
   uniform float uFlowSpeed;
+  uniform float uRippleMix;
 
   varying float vDisplacement;
+  varying float vRipple;
   varying vec3 vNormal;
   varying vec3 vViewPosition;
 
@@ -105,25 +107,28 @@ export const cloudyVertexShader = /* glsl */ `
   void main() {
     vec3 transformedNormal = normalize(normalMatrix * normal);
     float time = uTime * uFlowSpeed;
-    vec3 noisePosition = position * 0.35 * uNoiseScale + transformedNormal * uNoiseScale;
-    noisePosition += vec3(time * 0.18, time * 0.12, time * 0.21);
+    vec3 noisePosition = position * 0.4 * uNoiseScale + transformedNormal * (0.6 + uNoiseScale * 0.4);
+    noisePosition += vec3(time * 0.16, time * 0.36, time * 0.22);
 
     float base = fbm(noisePosition);
-    float detail = snoise(noisePosition * 2.3 + time * 0.4);
-    float wobble = snoise(vec3(position.xy * 0.5, time * 0.6));
+    float detail = snoise(noisePosition * 2.6 + time * 0.6);
+    float wobble = snoise(vec3(position.xy * 0.6, time * 0.9));
 
-    float displacement = base * uNoiseStrength + detail * (uNoiseStrength * 0.35) + wobble * uWobbleStrength;
+    float displacement = base * uNoiseStrength + detail * (uNoiseStrength * 0.4) + wobble * uWobbleStrength;
     vDisplacement = displacement;
     vNormal = transformedNormal;
 
-    vec3 displaced = position + transformedNormal * displacement;
+    float ripple = sin(position.y * 6.0 + time * 6.5) * 0.15;
+    vRipple = ripple * uRippleMix;
+
+    vec3 displaced = position + transformedNormal * (displacement + vRipple);
     vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
     vViewPosition = -mvPosition.xyz;
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
 
-export const cloudyFragmentShader = /* glsl */ `
+export const rainFragmentShader = /* glsl */ `
   precision highp float;
 
   uniform float uOpacity;
@@ -133,6 +138,7 @@ export const cloudyFragmentShader = /* glsl */ `
   uniform vec3 uHighlightColor;
 
   varying float vDisplacement;
+  varying float vRipple;
   varying vec3 vNormal;
   varying vec3 vViewPosition;
 
@@ -141,16 +147,16 @@ export const cloudyFragmentShader = /* glsl */ `
     vec3 viewDir = normalize(vViewPosition);
     float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.0);
 
-    float puff = smoothstep(-0.15, 0.45, vDisplacement * uHighlightGain + fresnel * 0.4);
-    float softness = smoothstep(0.0, 0.6, vDisplacement + 0.2);
-    float shadow = (1.0 - puff) * uShadowStrength;
+    float puff = smoothstep(-0.05, 0.5, vDisplacement * uHighlightGain + fresnel * 0.5);
+    float rippleShade = clamp(vRipple * 2.5, -0.5, 0.5);
+    float shadow = (1.0 - puff) * (0.2 + rippleShade * 0.3);
 
     vec3 color = mix(uBaseColor, uHighlightColor, puff);
-    color -= shadow * vec3(0.18, 0.16, 0.22);
-    color = mix(color, vec3(dot(color, vec3(0.299, 0.587, 0.114))), 1.0 - softness);
+    color -= shadow * vec3(0.12, 0.16, 0.22);
+    color += vec3(0.05, 0.08, 0.12) * clamp(vRipple, 0.0, 1.0);
     color = clamp(color, 0.0, 1.0);
 
-    float alpha = clamp(uOpacity * mix(0.85, 1.05, puff), 0.0, 1.0);
+    float alpha = clamp(uOpacity * mix(0.85, 1.1, puff), 0.0, 1.0);
     gl_FragColor = vec4(color, alpha);
   }
 `;
