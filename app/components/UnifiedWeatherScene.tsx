@@ -9,6 +9,7 @@ import { resolveWeatherObjectKind } from '../lib/weatherObjectKind';
 import type { Group } from 'three';
 import RainShaderSphere from './RainShaderSphere';
 import CloudyShaderSphere from './CloudyShaderSphere';
+import SnowShaderTorusKnot from './SnowShaderTorusKnot';
 
 // 背景シェーダープレーン（深度書き込み無効）
 export function BackgroundShaderPlane({
@@ -84,47 +85,6 @@ function ClearSphere3D({
   );
 }
 
-function SnowStream3D({
-  temp01 = 0.5,
-  precip01 = 0,
-  wind01 = 0,
-}: {
-  temp01?: number;
-  precip01?: number;
-  wind01?: number;
-}) {
-  const groupRef = useRef<Group>(null);
-  const flakes = useMemo(() => {
-    const count = Math.floor(20 + (precip01 ?? 0) * 40);
-    return Array.from({ length: count }, (_, i) => ({
-      key: i,
-      position: [
-        (Math.random() - 0.5) * 5,
-        (Math.random() - 0.5) * 4,
-        4.5 + Math.random() * 1.5,
-      ] as [number, number, number],
-      size: 0.07 + (1 - (temp01 ?? 0.5)) * 0.08,
-    }));
-  }, [precip01, temp01]);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.x += 0.05 * delta;
-    groupRef.current.rotation.z = -0.2 + (wind01 ?? 0) * 0.4;
-  });
-
-  return (
-    <group ref={groupRef} position={[0, 0, 0]} renderOrder={2}>
-      {flakes.map(({ key, position, size }) => (
-        <mesh key={key} position={position}>
-          <sphereGeometry args={[size, 8, 8]} />
-          <meshStandardMaterial color="#ffffff" emissive="#cbe7ff" emissiveIntensity={0.2} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 function ThunderSpire3D({
   precip01 = 0,
   wind01 = 0,
@@ -196,7 +156,7 @@ const Weather3DObject = React.memo(function Weather3DObject({
   }
 
   if (kind === 'snow') {
-    return <SnowStream3D temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <SnowShaderTorusKnot temp01={temp01} precip01={precip01} wind01={wind01} />;
   }
 
   if (kind === 'thunder') {

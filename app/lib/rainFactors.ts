@@ -34,7 +34,7 @@ export function computeRainFactors({
 
   const coldness = 1 - temp;
 
-  const noiseScale = 0.7 + coldness * 0.8 + precip * 0.3; // 雨雲の層を広げる
+  const noiseScale = 0.7 + coldness * 0.8 + precip * 0.3;
   const noiseStrength = 0.2 + precip * 0.45 + wind * 0.1;
   const wobbleStrength = 0.04 + wind * 0.15;
   const flowSpeed = 0.35 + wind * 1.1 + precip * 0.3;

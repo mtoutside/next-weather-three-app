@@ -48,7 +48,7 @@
    - ✅ Clear: 既存の `MappedSphereFBO` により球体ベースの表現が成立
    - ✅ Cloudy: SphereGeometry を波・渦ノイズでうねらせた曇天シェーダを実装
    - ✅ Rain: SphereGeometry にシェーダ（simplex fbm + ripple）で雨雲・波紋表現を実装
-   - ☐ Snow: 球体を柔らかくたわませる
+   - ✅ Snow: TorusKnotGeometry + 波シェーダで結晶風トポロジを表現
    - ☐ Thunder: 球体を尖らせる変調
 
 ## 現在地の天気予報をシェーダに反映する実装方針
