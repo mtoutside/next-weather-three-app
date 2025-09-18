@@ -24,6 +24,8 @@ export default function TweakpanePanel({
   const containerRef = useRef<HTMLDivElement>(null);
   const paneRef = useRef<Pane | null>(null);
   const isInitialized = useRef(false);
+  const paneParamsRef = useRef<Record<string, TweakpaneValue>>({ ...params });
+  const bindingsRef = useRef<Record<string, { value: TweakpaneValue } | undefined>>({});
 
   // 初期化を一度だけ実行
   useEffect(() => {
@@ -38,13 +40,32 @@ export default function TweakpanePanel({
 
       paneRef.current.registerPlugin(EssentialsPlugin);
       isInitialized.current = true;
+      paneParamsRef.current = { ...params };
 
       // 初期パラメータでバインディングを作成
       Object.entries(params).forEach(([key, value]) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pane = paneRef.current as any;
-
+        const pane = paneRef.current as unknown as {
+          addBinding: (
+            target: Record<string, TweakpaneValue>,
+            key: string,
+            options?: unknown,
+          ) => {
+            value: TweakpaneValue;
+            on: (event: string, handler: (ev: { value: TweakpaneValue }) => void) => unknown;
+          } & { value: TweakpaneValue };
+        };
+        if (!pane) return;
         try {
+          const bindingTarget = paneParamsRef.current;
+          bindingTarget[key] = value;
+
+          const handleChange = (newValue: TweakpaneValue) => {
+            paneParamsRef.current[key] = newValue;
+            if (onParamsChange) {
+              onParamsChange({ ...paneParamsRef.current });
+            }
+          };
+
           // カスタムオプション（セレクトボックス）がある場合
           if (customOptions[key]) {
             const options = customOptions[key].reduce(
@@ -54,33 +75,30 @@ export default function TweakpanePanel({
               },
               {} as Record<string, number>,
             );
-
-            const obj = { [key]: value };
-            pane.addBinding(obj, key, { options }).on('change', (ev: { value: number }) => {
-              if (onParamsChange) {
-                onParamsChange({ ...params, [key]: ev.value });
-              }
-            });
+            const binding = pane.addBinding(bindingTarget, key, { options }) as unknown as {
+              value: TweakpaneValue;
+              on: (event: string, handler: (ev: { value: number }) => void) => unknown;
+            };
+            bindingsRef.current[key] = binding as unknown as { value: TweakpaneValue };
+            binding.on('change', (ev: { value: number }) => handleChange(ev.value));
           } else if (typeof value === 'number') {
-            const obj = { [key]: value };
-            pane
-              .addBinding(obj, key, {
-                min: 0,
-                max: 1,
-                step: 0.01,
-              })
-              .on('change', (ev: { value: number }) => {
-                if (onParamsChange) {
-                  onParamsChange({ ...params, [key]: ev.value });
-                }
-              });
+            const binding = pane.addBinding(bindingTarget, key, {
+              min: 0,
+              max: 1,
+              step: 0.01,
+            }) as unknown as {
+              value: TweakpaneValue;
+              on: (event: string, handler: (ev: { value: number }) => void) => unknown;
+            };
+            bindingsRef.current[key] = binding as unknown as { value: TweakpaneValue };
+            binding.on('change', (ev: { value: number }) => handleChange(ev.value));
           } else if (typeof value === 'boolean') {
-            const obj = { [key]: value };
-            pane.addBinding(obj, key).on('change', (ev: { value: boolean }) => {
-              if (onParamsChange) {
-                onParamsChange({ ...params, [key]: ev.value });
-              }
-            });
+            const binding = pane.addBinding(bindingTarget, key) as unknown as {
+              value: TweakpaneValue;
+              on: (event: string, handler: (ev: { value: boolean }) => void) => unknown;
+            };
+            bindingsRef.current[key] = binding as unknown as { value: TweakpaneValue };
+            binding.on('change', (ev: { value: boolean }) => handleChange(ev.value));
           }
         } catch {
           // エラーは静かに無視
@@ -95,9 +113,23 @@ export default function TweakpanePanel({
         paneRef.current.dispose();
         paneRef.current = null;
         isInitialized.current = false;
+        bindingsRef.current = {};
       }
     };
   }, []); // 空の依存配列で一度だけ実行
+
+  // 外部から渡される params の変化をバインディングへ反映
+  useEffect(() => {
+    if (!paneRef.current) return;
+    Object.entries(params).forEach(([key, value]) => {
+      if (paneParamsRef.current[key] === value) return;
+      paneParamsRef.current[key] = value;
+      const binding = bindingsRef.current[key];
+      if (binding) {
+        binding.value = value as TweakpaneValue;
+      }
+    });
+  }, [params]);
 
   return (
     <div
