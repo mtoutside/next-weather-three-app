@@ -2,7 +2,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useGeolocation } from '../hooks/useGeolocation';
 import WeatherThreeScene from '../components/WeatherThreeScene';
-import { normalizeTempC } from '../lib/normalize';
+import { normalizeTempC, normalizePrecipProbability, normalizeWindSpeed } from '../lib/normalize';
 import { weathercodeToJa } from '../lib/weathercode';
 
 type Row = {
@@ -23,6 +23,14 @@ export default function OpenMeteoPage() {
   const temp01 = useMemo(() => {
     const t = rows?.[0]?.temperature_2m;
     return typeof t === 'number' ? normalizeTempC(t) : undefined;
+  }, [rows]);
+  const precip01 = useMemo(() => {
+    const p = rows?.[0]?.precipitation_probability;
+    return typeof p === 'number' ? normalizePrecipProbability(p) : undefined;
+  }, [rows]);
+  const wind01 = useMemo(() => {
+    const w = rows?.[0]?.windspeed_10m;
+    return typeof w === 'number' ? normalizeWindSpeed(w) : undefined;
   }, [rows]);
 
   const disabled = useMemo(() => loading, [loading]);
@@ -155,11 +163,24 @@ export default function OpenMeteoPage() {
       <div style={{ marginTop: 16 }}>
         <h2>温度連動シェーダ</h2>
         <p style={{ marginTop: 4, color: '#666' }}>
-          現在の取得データの先頭の気温を使用して色や動きを変化させます。
+          現在の取得データの先頭の値を使用して色や動きを変化させます。
           {typeof temp01 === 'number' && (
             <>
               {' '}
               正規化温度: <code>{temp01.toFixed(3)}</code>
+            </>
+          )}
+          {typeof precip01 === 'number' && rows?.[0]?.precipitation_probability != null && (
+            <>
+              {' '}
+              | 降水確率: <code>{rows[0].precipitation_probability}%</code> (
+              <code>{precip01.toFixed(3)}</code>)
+            </>
+          )}
+          {typeof wind01 === 'number' && rows?.[0]?.windspeed_10m != null && (
+            <>
+              {' '}
+              | 風速: <code>{rows[0].windspeed_10m} m/s</code> (<code>{wind01.toFixed(3)}</code>)
             </>
           )}
           {rows?.[0]?.weathercode != null && (
@@ -169,7 +190,7 @@ export default function OpenMeteoPage() {
             </>
           )}
         </p>
-        <WeatherThreeScene temp01={temp01} />
+        <WeatherThreeScene temp01={temp01} precip01={precip01} wind01={wind01} />
       </div>
     </div>
   );

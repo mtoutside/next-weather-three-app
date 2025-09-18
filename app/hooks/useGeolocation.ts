@@ -21,13 +21,14 @@ export function useGeolocation(options?: PositionOptions) {
 
   const request = useCallback(() => {
     setError(null);
-    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+    const geo = typeof navigator !== 'undefined' ? navigator.geolocation : undefined;
+    if (!geo) {
       setStatus('unsupported');
       return;
     }
     setStatus('loading');
     requestedRef.current = true;
-    navigator.geolocation.getCurrentPosition(
+    geo.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setCoords({ latitude, longitude });

@@ -8,9 +8,11 @@ export const vertexShader = /* glsl */ `
 
 // 2D value noise + 5-octave fbm
 export const fragmentShader = /* glsl */ `
-  precision highp float;
+ precision highp float;
   uniform float uTime;
   uniform float uTemp; // 0..1（低温→高温）
+  uniform float uPrecip; // 0..1（降水確率）
+  uniform float uWind; // 0..1（風速）
   varying vec2 vUv;
 
   // Hash: 2D -> 1D [0,1)
@@ -52,23 +54,31 @@ export const fragmentShader = /* glsl */ `
   }
 
   void main() {
+    float temp = clamp(uTemp, 0.0, 1.0);
+    float precip = clamp(uPrecip, 0.0, 1.0);
+    float wind = clamp(uWind, 0.0, 1.0);
+
     // 温度で色相を補間（寒色→暖色）
     vec3 cold = vec3(0.2, 0.5, 1.0);
     vec3 warm = vec3(1.0, 0.35, 0.1);
-    vec3 base = mix(cold, warm, clamp(uTemp, 0.0, 1.0));
+    vec3 base = mix(cold, warm, temp);
 
-    // 温度で速度・明瞭度を調整
-    float speed = mix(0.2, 1.3, uTemp);
-    float scale = mix(3.0, 9.0, uTemp);
+    // 温度と風速で動き、降水でスケールを調整
+    float speed = mix(0.2, 1.3, temp) * mix(0.7, 1.8, wind);
+    float scale = mix(3.0, 9.0, temp);
+    scale = mix(scale, scale * 1.6, precip);
 
+    vec2 windDir = normalize(vec2(0.6, -0.3));
     vec2 p = vUv * scale + vec2(uTime * 0.2 * speed, uTime * 0.15 * speed);
+    p += windDir * wind * uTime * 0.4;
     float n = fbm(p);
 
-    // コントラストを少し高める
-    n = smoothstep(0.2, 0.9, n);
-    float glow = mix(0.6, 1.2, uTemp);
-    vec3 col = base * mix(0.7, 1.3, n * glow);
+    float contrastLow = mix(0.25, 0.15, precip);
+    float contrastHigh = mix(0.85, 0.95, precip);
+    n = smoothstep(contrastLow, contrastHigh, n);
+    float glow = mix(0.6, 1.2, temp) * mix(0.9, 1.2, precip);
+    vec3 col = base * mix(0.7, 1.35, n * glow);
+    col = mix(col, vec3(dot(col, vec3(0.299, 0.587, 0.114))), wind * 0.2);
     gl_FragColor = vec4(col, 1.0);
   }
 `;
-

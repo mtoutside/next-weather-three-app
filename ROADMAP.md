@@ -12,6 +12,7 @@
 - Weather（天気）拡張の土台
   - `weathercode` の日本語化（`weathercodeToJa`）
 - Open-Meteo（forecast API）から `weathercode / temperature_2m / precipitation_probability / windspeed_10m` を取得しUIで可視化する実験ページ（`/open-meteo`）
+- 降水確率・風速を `normalizePrecipProbability` / `normalizeWindSpeed` で正規化し、シェーダ uniform に反映（テスト済み）
   - APIルートでURL生成を `buildJmaUrlWithFields` に一元化（非破壊リファクタ）
 - TDD/テストの整備
   - `normalize`, `useGeolocation`, `jma`（URL/取得/正規化）, `weathercode`, `fbm`（構造）, FBOヘルパ（`createFbmUniforms/smoothFollow/getFboSize`）のテスト
@@ -45,8 +46,8 @@
 ## 背景シェーダ仕様
 - **ベースシェーダ**: 既存の fbm ノイズを背景用に転用し、時間経過で緩やかにスクロールさせる。
 - **色決定ロジック**: 気温 uniform を 0〜1 に正規化し、寒色（ディープブルー〜シアン）から暖色（アンバー〜サンセットオレンジ）へのグラデーション LUT を補間。低温ほど冷たい色味、高温ほど暖かい色味に寄せる。
-- **補助効果**: 温度変化に応じて fbm のコントラストと露光も調整し、高温時はコントラスト高め、低温時は柔らかいトーンにして視覚的な温度感を表現する。
-- **uniform 利用**: 気温は必須入力。降水確率・風速は背景では直接使用せず、将来的な拡張（雨量でノイズ密度、風速でスクロール速度）に備えて uniform パイプラインには残す。
+- **補助効果**: 降水確率 uniform でコントラストと模様の粗さを調整、風速 uniform でスクロール方向と速度を変化させる。高温時はコントラスト高め、低温時は柔らかいトーンにして視覚的な温度感を表現。
+- **uniform 利用**: 気温・降水確率・風速をすべて正規化して受け取り、`uTemp/uPrecip/uWind` に接続済み。将来的な気象オブジェクト側とも同じ正規化値を共有する。
 
 ## 天気ごとの 3D オブジェクト仕様（r3f）
 - **クリアスフィア（weathercode 0–1）**: `SphereGeometry`。気温で表面カラーを補間し、降水確率でフレネル反射強度を調整。風速で自転速度とノイズ歪み量を変化させ晴天の静動感を演出。

@@ -16,3 +16,19 @@ export function normalizeTempC(tempC: number, min = -10, max = 40): number {
   const t = (tempC - min) / (max - min);
   return clamp01(t);
 }
+
+/**
+ * 降水確率(0..100%)を0..1へ正規化。異常値はクランプ。
+ */
+export function normalizePrecipProbability(prob: number): number {
+  if (!Number.isFinite(prob)) return 0;
+  return clamp01(prob / 100);
+}
+
+/**
+ * 風速(m/s)を0..1へ正規化。既定レンジは 0..30m/s（台風レベルを上限想定）。
+ */
+export function normalizeWindSpeed(speed: number, max = 30): number {
+  if (!Number.isFinite(speed) || !Number.isFinite(max) || max <= 0) return 0;
+  return clamp01(speed / max);
+}

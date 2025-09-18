@@ -16,8 +16,7 @@ describe('fbm shaders', () => {
     expect(fragmentShader).toMatch(/for\s*\(\s*int\s+i\s*=\s*0;\s*i\s*<\s*5;\s*i\+\+\s*\)/);
   });
 
-  it('fragment shader mixes cold/warm colors by uTemp', () => {
-    expect(fragmentShader).toMatch(/mix\(\s*cold\s*,\s*warm\s*,\s*.*uTemp/);
+  it('fragment shader mixes cold/warm colors by temperature value', () => {
+    expect(fragmentShader).toMatch(/mix\(\s*cold\s*,\s*warm\s*,\s*.*(uTemp|temp)/);
   });
 });
-
