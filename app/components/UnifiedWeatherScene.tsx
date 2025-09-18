@@ -8,6 +8,7 @@ import { useShaderFBOTexture } from '../hooks/useShaderFBOTexture';
 import { resolveWeatherObjectKind } from '../lib/weatherObjectKind';
 import type { Group } from 'three';
 import RainShaderSphere from './RainShaderSphere';
+import CloudyShaderSphere from './CloudyShaderSphere';
 
 // 背景シェーダープレーン（深度書き込み無効）
 export function BackgroundShaderPlane({
@@ -79,56 +80,6 @@ function ClearSphere3D({
         <sphereGeometry args={[1.5, 48, 48]} />
         <meshStandardMaterial map={tex} roughness={0.2} metalness={0.2} />
       </mesh>
-    </group>
-  );
-}
-
-function CloudLayer3D({
-  precip01 = 0,
-  wind01 = 0,
-}: {
-  temp01?: number;
-  precip01?: number;
-  wind01?: number;
-}) {
-  const groupRef = useRef<Group>(null);
-  const puffConfigs = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, i) => {
-        const spread = i - 3;
-        const scale = 0.7 + (precip01 ?? 0) * 0.7 + Math.random() * 0.2;
-        return {
-          key: i,
-          position: [spread * 0.75, Math.sin(i) * 0.22, 5.2 + Math.random() * 0.35] as [
-            number,
-            number,
-            number,
-          ],
-          scale,
-        };
-      }),
-    [precip01],
-  );
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.y += (0.04 + wind01 * 0.12) * delta;
-  });
-
-  return (
-    <group ref={groupRef} position={[0, 0.25, 0]} renderOrder={1}>
-      {puffConfigs.map(({ key, position, scale }) => (
-        <mesh key={key} position={position} scale={[scale, scale * 0.72, scale]}>
-          <sphereGeometry args={[1.1, 32, 32]} />
-          <meshStandardMaterial
-            color="#d6dde9"
-            roughness={0.96}
-            metalness={0.04}
-            transparent
-            opacity={0.78 - (precip01 ?? 0) * 0.25}
-          />
-        </mesh>
-      ))}
     </group>
   );
 }
@@ -237,7 +188,7 @@ const Weather3DObject = React.memo(function Weather3DObject({
   }
 
   if (kind === 'cloudy') {
-    return <CloudLayer3D temp01={temp01} precip01={precip01} wind01={wind01} />;
+    return <CloudyShaderSphere temp01={temp01} precip01={precip01} wind01={wind01} />;
   }
 
   if (kind === 'rain') {
