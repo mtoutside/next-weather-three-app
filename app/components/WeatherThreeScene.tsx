@@ -58,10 +58,8 @@ export default function WeatherThreeScene({
     <div
       style={{
         width: '100%',
-        height: '60vh',
-        borderRadius: 12,
+        height: '100%',
         overflow: 'hidden',
-        boxShadow: '0 6px 24px rgba(0,0,0,0.15)',
         background: '#000',
       }}
     >
