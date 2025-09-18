@@ -39,7 +39,7 @@ export function TemperatureShaderPlane({
 
   return (
     <mesh>
-      <planeGeometry args={[4, 3, 1, 1]} />
+      <planeGeometry args={[50, 30, 1, 1]} />
       <shaderMaterial uniforms={uniforms} vertexShader={vertex} fragmentShader={fragment} />
     </mesh>
   );
@@ -63,7 +63,7 @@ export default function WeatherThreeScene({
         background: '#000',
       }}
     >
-      <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+      <Canvas camera={{ position: [0, 0, 5], fov: 100 }} style={{ width: '100%', height: '100%' }}>
         <TemperatureShaderPlane temp01={temp01} precip01={precip01} wind01={wind01} />
       </Canvas>
     </div>
