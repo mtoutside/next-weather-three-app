@@ -44,6 +44,12 @@
 8. **テストと CI の整備**: 既存テストを維持拡充し、CI（GitHub Actions）で typecheck/lint/test を自動化
 9. **パフォーマンス**: FBO解像度の自動調整、非アクティブ時のレンダ抑制、必要に応じて `LinearMipmapLinearFilter` 等の検証
 10. **API設計の方針**: 現状 `/api/jma` は上流の生JSON互換を維持。正規化配列を返す新エンドポイントは要件が固まってから（バージョン/別パス）
+11. **天気オブジェクトの球体シェーダ統一**: weathercode ごとに単一の `SphereGeometry` にシェーダ変調で表情付けする再設計
+   - ✅ Clear: 既存の `MappedSphereFBO` により球体ベースの表現が成立
+   - ✅ Cloudy: SphereGeometry にシェーダ変調 (simplex fbm) でメタボール表現を実装
+   - ☐ Rain: 波紋・うねりを付与
+   - ☐ Snow: 球体を柔らかくたわませる
+   - ☐ Thunder: 球体を尖らせる変調
 
 ## 現在地の天気予報をシェーダに反映する実装方針
 1. **位置情報の取得**: `navigator.geolocation` で緯度・経度を取得し、利用不可の場合はIPベースの位置情報APIを検討する。
