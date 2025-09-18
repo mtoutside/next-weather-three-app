@@ -3,7 +3,8 @@ import { useMemo, useState } from 'react';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useWeatherData } from './hooks/useWeatherData';
 import UnifiedWeatherScene from './components/UnifiedWeatherScene';
-import { weathercodeToJa } from './lib/weathercode';
+import TweakpanePanel from './components/TweakpanePanel';
+import { weathercodeToJa, getWeathercodeOptions } from './lib/weathercode';
 import styles from './page.module.css';
 
 export default function WeatherApp() {
@@ -12,11 +13,41 @@ export default function WeatherApp() {
   const geo = useGeolocation({ enableHighAccuracy: false, maximumAge: 60_000 });
   const { weatherData, loading, error, fetchWeatherData } = useWeatherData();
 
+  // TweakPane用の調整可能パラメータ（初期値固定で無限再レンダーを防ぐ）
+  const [tweakParams, setTweakParams] = useState({
+    tempOverride: 0.5,
+    precipOverride: 0,
+    windOverride: 0,
+    weathercodeOverride: 0,
+    useRealData: true, // 実データ使用フラグ
+  });
+
   const disabled = useMemo(() => loading, [loading]);
 
   const handleFetchData = () => {
     fetchWeatherData(lat, lon);
   };
+
+  // 天気コード選択肢
+  const weathercodeOptions = useMemo(() => getWeathercodeOptions(), []);
+
+  // 実データまたはTweakパラメータの決定
+  const finalParams = useMemo(() => {
+    if (tweakParams.useRealData && weatherData) {
+      return {
+        temp01: weatherData.temp01,
+        precip01: weatherData.precip01,
+        wind01: weatherData.wind01,
+        weathercode: weatherData.weathercode,
+      };
+    }
+    return {
+      temp01: tweakParams.tempOverride,
+      precip01: tweakParams.precipOverride,
+      wind01: tweakParams.windOverride,
+      weathercode: tweakParams.weathercodeOverride,
+    };
+  }, [weatherData, tweakParams]);
 
   return (
     <div className={styles.page} style={{ position: 'relative', minHeight: '100vh' }}>
@@ -32,10 +63,10 @@ export default function WeatherApp() {
         }}
       >
         <UnifiedWeatherScene
-          temp01={weatherData?.temp01}
-          precip01={weatherData?.precip01}
-          wind01={weatherData?.wind01}
-          weathercode={weatherData?.weathercode}
+          temp01={finalParams.temp01}
+          precip01={finalParams.precip01}
+          wind01={finalParams.wind01}
+          weathercode={finalParams.weathercode}
         />
       </div>
 
@@ -311,6 +342,16 @@ export default function WeatherApp() {
           </div>
         </footer>
       </main>
+
+      {/* TweakPane デバッグパネル */}
+      <TweakpanePanel
+        title="Weather Debug Panel"
+        params={tweakParams}
+        onParamsChange={(newParams) => setTweakParams(newParams as typeof tweakParams)}
+        customOptions={{
+          weathercodeOverride: weathercodeOptions,
+        }}
+      />
     </div>
   );
 }

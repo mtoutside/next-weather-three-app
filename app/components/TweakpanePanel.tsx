@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 
@@ -11,6 +11,7 @@ interface TweakpanePanelProps {
   onParamsChange?: (params: Record<string, TweakpaneValue>) => void;
   title?: string;
   className?: string;
+  customOptions?: Record<string, Array<{ text: string; value: number }>>;
 }
 
 export default function TweakpanePanel({
@@ -18,77 +19,85 @@ export default function TweakpanePanel({
   onParamsChange,
   title = 'Debug Panel',
   className = '',
+  customOptions = {},
 }: TweakpanePanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const paneRef = useRef<Pane | null>(null);
-  const paramsRef = useRef(params);
+  const isInitialized = useRef(false);
 
-  const handleParamsChange = useCallback(() => {
-    if (onParamsChange) {
-      onParamsChange(paramsRef.current);
-    }
-  }, [onParamsChange]);
-
+  // 初期化を一度だけ実行
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || isInitialized.current) return;
 
-    paneRef.current = new Pane({
-      container: containerRef.current,
-      title,
-    });
+    try {
+      // 新しいPaneを作成
+      paneRef.current = new Pane({
+        container: containerRef.current,
+        title,
+      });
 
-    paneRef.current.registerPlugin(EssentialsPlugin);
+      paneRef.current.registerPlugin(EssentialsPlugin);
+      isInitialized.current = true;
+
+      // 初期パラメータでバインディングを作成
+      Object.entries(params).forEach(([key, value]) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pane = paneRef.current as any;
+
+        try {
+          // カスタムオプション（セレクトボックス）がある場合
+          if (customOptions[key]) {
+            const options = customOptions[key].reduce(
+              (acc, option) => {
+                acc[option.text] = option.value;
+                return acc;
+              },
+              {} as Record<string, number>,
+            );
+
+            const obj = { [key]: value };
+            pane.addBinding(obj, key, { options }).on('change', (ev: { value: number }) => {
+              if (onParamsChange) {
+                onParamsChange({ ...params, [key]: ev.value });
+              }
+            });
+          } else if (typeof value === 'number') {
+            const obj = { [key]: value };
+            pane
+              .addBinding(obj, key, {
+                min: 0,
+                max: 1,
+                step: 0.01,
+              })
+              .on('change', (ev: { value: number }) => {
+                if (onParamsChange) {
+                  onParamsChange({ ...params, [key]: ev.value });
+                }
+              });
+          } else if (typeof value === 'boolean') {
+            const obj = { [key]: value };
+            pane.addBinding(obj, key).on('change', (ev: { value: boolean }) => {
+              if (onParamsChange) {
+                onParamsChange({ ...params, [key]: ev.value });
+              }
+            });
+          }
+        } catch {
+          // エラーは静かに無視
+        }
+      });
+    } catch (e) {
+      console.error('TweakPane: Failed to initialize:', e);
+    }
 
     return () => {
       if (paneRef.current) {
         paneRef.current.dispose();
         paneRef.current = null;
+        isInitialized.current = false;
       }
     };
-  }, [title]);
-
-  useEffect(() => {
-    if (!paneRef.current) return;
-
-    paneRef.current.dispose();
-    paneRef.current = new Pane({
-      container: containerRef.current!,
-      title,
-    });
-
-    paneRef.current.registerPlugin(EssentialsPlugin);
-    paramsRef.current = { ...params };
-
-    Object.entries(params).forEach(([key, value]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pane = paneRef.current as any;
-      if (typeof value === 'number') {
-        pane
-          .addBinding(paramsRef.current, key, {
-            min: typeof value === 'number' && value >= 0 ? 0 : value - 10,
-            max: typeof value === 'number' && value >= 0 ? value + 10 : value + 10,
-            step: 0.01,
-          })
-          .on('change', handleParamsChange);
-      } else if (typeof value === 'boolean') {
-        pane.addBinding(paramsRef.current, key).on('change', handleParamsChange);
-      } else if (typeof value === 'string') {
-        pane.addBinding(paramsRef.current, key).on('change', handleParamsChange);
-      } else if (
-        Array.isArray(value) &&
-        value.length === 3 &&
-        value.every((v) => typeof v === 'number')
-      ) {
-        pane
-          .addBinding(paramsRef.current, key, {
-            x: { min: -10, max: 10, step: 0.01 },
-            y: { min: -10, max: 10, step: 0.01 },
-            z: { min: -10, max: 10, step: 0.01 },
-          })
-          .on('change', handleParamsChange);
-      }
-    });
-  }, [params, title, handleParamsChange]);
+  }, []); // 空の依存配列で一度だけ実行
 
   return (
     <div
