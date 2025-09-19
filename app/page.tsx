@@ -82,15 +82,6 @@ export default function WeatherApp() {
           >
             Weather App
           </h1>
-          <p
-            style={{
-              color: 'rgba(255,255,255,0.8)',
-              margin: '0.5rem 0 0 0',
-              textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-            }}
-          >
-            リアルタイム天気予報
-          </p>
         </header>
 
         {/* 位置情報・データ取得セクション */}
@@ -220,7 +211,7 @@ export default function WeatherApp() {
 
         {/* 天気情報表示セクション */}
         {weatherData && (
-          <section style={{ marginBottom: '2rem' }}>
+          <section style={{ marginTop: 'auto' }}>
             <div
               style={{
                 background: 'rgba(0,0,0,0.6)',
@@ -267,37 +258,6 @@ export default function WeatherApp() {
                   </p>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
-
-        {/* 天気ビジュアライゼーション情報 */}
-        {weatherData && (
-          <section style={{ marginBottom: '2rem' }}>
-            <div style={{ textAlign: 'center' }}>
-              <h3
-                style={{
-                  margin: '0 0 1rem 0',
-                  color: 'white',
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                }}
-              >
-                リアルタイム天気ビジュアライゼーション
-                <small
-                  style={{
-                    display: 'block',
-                    color: 'rgba(255,255,255,0.7)',
-                    fontWeight: 400,
-                    textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                    marginTop: '0.5rem',
-                  }}
-                >
-                  背景とオブジェクトが天気データに連動して変化します
-                  {weatherData?.weathercode != null && (
-                    <span> (天気コード: {weatherData.weathercode})</span>
-                  )}
-                </small>
-              </h3>
             </div>
           </section>
         )}
