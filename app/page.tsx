@@ -261,45 +261,6 @@ export default function WeatherApp() {
             </div>
           </section>
         )}
-
-        {/* フッター・リンク */}
-        <footer style={{ textAlign: 'center', padding: '2rem 0' }}>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a
-              href="/open-meteo"
-              style={{
-                color: 'rgba(255,255,255,0.7)',
-                textDecoration: 'none',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                transition: 'color 0.3s ease',
-              }}
-            >
-              データ確認ページ
-            </a>
-            <a
-              href="/fbo-example"
-              style={{
-                color: 'rgba(255,255,255,0.7)',
-                textDecoration: 'none',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                transition: 'color 0.3s ease',
-              }}
-            >
-              FBO例
-            </a>
-            <a
-              href="/three"
-              style={{
-                color: 'rgba(255,255,255,0.7)',
-                textDecoration: 'none',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                transition: 'color 0.3s ease',
-              }}
-            >
-              Three.jsデモ
-            </a>
-          </div>
-        </footer>
       </main>
 
       {/* TweakPane デバッグパネル */}
