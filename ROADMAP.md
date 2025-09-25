@@ -7,8 +7,8 @@
 - JMA（Open-Meteo JMA）から気温を取得し、`normalizeTempC` で正規化
 - 正規化された気温値（`uTemp`）に応じて反応するシェーダ（fbm統合済み）
 - fbm シェーダを `WeatherThreeScene` に統合（`app/shaders/fbm.ts`）
-- FBO（オフスクリーン）でシェーダをテクスチャ化し、オブジェクトへマッピングする最小実装
-  - フック: `useShaderFBOTexture`、例ページ: `/fbo-example`
+- ~~FBO（オフスクリーン）でシェーダをテクスチャ化し、オブジェクトへマッピングする最小実装~~ → **直接シェーダー実装に変更** ✅ **完了**
+  - ~~フック: `useShaderFBOTexture`、例ページ: `/fbo-example`~~ → パフォーマンス向上のため直接実装へ移行
 - Weather（天気）拡張の土台
   - `weathercode` の日本語化（`weathercodeToJa`）
 - Open-Meteo（forecast API）から `weathercode / temperature_2m / precipitation_probability / windspeed_10m` を取得しUIで可視化する実験ページ（`/open-meteo`）
@@ -23,7 +23,7 @@
   - パフォーマンス最適化（React.memo, uniforms最適化, ライティングメモ化）
   - 全画面背景シェーダー表示（150×100プレーン, FOV120度, 画面全体カバー）
 - TDD/テストの整備
-  - `normalize`, `useGeolocation`, `jma`（URL/取得/正規化）, `weathercode`, `fbm`（構造）, FBOヘルパ（`createFbmUniforms/smoothFollow/getFboSize`）のテスト
+  - `normalize`, `useGeolocation`, `jma`（URL/取得/正規化）, `weathercode`, `fbm`（構造）のテスト
 - **TweakPaneデバッグツールの実装** ✅ **完了**
   - 統合天気予報アプリにTweakPaneデバッグパネルを追加
   - 数値スライダー: `tempOverride`, `windOverride` (0-1範囲、0.01ステップ)
@@ -32,6 +32,12 @@
   - 天気コード選択肢の動的生成（`getWeathercodeOptions`）
   - 安定したTweakPane初期化とドラッグ可能なスライダー実装
   - 不要なCSSスタイル整理（緑色ボタン削除、globals.css最適化）
+- **FBO→直接シェーダー実装への移行** ✅ **完了**
+  - 晴れ・快晴用球体(`ClearSphere3D`)をFBO使用から直接シェーダー実装に変更
+  - 新規作成: `app/shaders/sphereFbm.ts` (球体用FBMシェーダー + ライティング)
+  - パフォーマンス最適化: 球体サイズに応じた適応的計算負荷
+  - 不要ファイル削除: `useShaderFBOTexture.ts`, `WeatherObject.tsx`, `MappedSphereFBO.tsx`
+  - ヘルパー関数移行: `createFbmUniforms`, `smoothFollow` を `UnifiedWeatherScene.tsx` 内に統合
 
 ## 今後の予定
 1. ~~**Open-Meteo 主要値の反映**: Open-Meteo から取得する「天気コード・気温・降水確率・風速」を shader uniform に接続し、温度や風の強弱、降水ステータスに応じたマテリアル変化を実装~~ ✅ **完了**
@@ -42,10 +48,10 @@
 6. **堅牢なエラーハンドリング**: リトライ（指数バックオフ）、オフライン検出とフォールバック、位置情報拒否時の入力補助UIを強化
 7. **UI/UX の向上**: レスポンシブ対応、アクセシビリティ改善、ローディング状態の視覚化
 8. **テストと CI の整備**: 既存テストを維持拡充し、CI（GitHub Actions）で typecheck/lint/test を自動化
-9. **パフォーマンス**: FBO解像度の自動調整、非アクティブ時のレンダ抑制、必要に応じて `LinearMipmapLinearFilter` 等の検証
+9. **パフォーマンス**: ~~FBO解像度の自動調整~~（直接実装移行完了）、非アクティブ時のレンダ抑制、必要に応じて `LinearMipmapLinearFilter` 等の検証
 10. **API設計の方針**: 現状 `/api/jma` は上流の生JSON互換を維持。正規化配列を返す新エンドポイントは要件が固まってから（バージョン/別パス）
 11. **天気オブジェクトの球体シェーダ統一**: weathercode ごとに単一の `SphereGeometry` にシェーダ変調で表情付けする再設計
-   - ✅ Clear: 既存の `MappedSphereFBO` により球体ベースの表現が成立
+   - ✅ Clear: **直接FBMシェーダー実装**により球体ベースの表現が成立（FBO→直接実装へ移行完了）
    - ✅ Cloudy: SphereGeometry を波・渦ノイズでうねらせた曇天シェーダを実装
    - ✅ Rain: SphereGeometry にシェーダ（simplex fbm + ripple）で雨雲・波紋表現を実装
    - ✅ Snow: TorusKnotGeometry + 波シェーダで結晶風トポロジを表現
@@ -73,12 +79,12 @@
 - **補助効果**: 降水確率 uniform でコントラストと模様の粗さを調整、風速 uniform でスクロール方向と速度を変化させる。高温時はコントラスト高め、低温時は柔らかいトーンにして視覚的な温度感を表現。
 - **uniform 利用**: 気温・降水確率・風速をすべて正規化して受け取り、`uTemp/uPrecip/uWind` に接続済み。将来的な気象オブジェクト側とも同じ正規化値を共有する。
 
-## 天気ごとの 3D オブジェクト仕様（r3f）
-- **クリアスフィア（weathercode 0–1）**: `SphereGeometry`。気温で表面カラーを補間し、降水確率でフレネル反射強度を調整。風速で自転速度とノイズ歪み量を変化させ晴天の静動感を演出。
-- **レイヤーシェル（weathercode 2–4, 45, 48）**: メタボールベースの曇雲体。気温でボリューム膨張率、降水確率で等値面閾値（濃度）、風速で雲塊の流れ方向・速度を制御し、重い曇天から霧まで表現する。
-- **リップルプレーン（weathercode 51–67, 80–82）**: `PlaneGeometry` に波紋シェーダ。気温で水色と粘性、降水確率で波振幅・頻度、風速でスクロール方向・速度を変え雨脚と風の影響を示す。
-- **ストリーマー（weathercode 71–77, 85–86）**: `InstancedMesh` の雪片。気温で雪片サイズ・発光、降水確率で粒子密度、風速で降下角度と落下速度を操作し、粉雪から吹雪まで連続的に表現。
-- **プラズマスパイア（weathercode 95–99）**: 稲妻状に揺れる `CylinderGeometry`。気温で発光色を変え、降水確率でパルス頻度とフォグ密度を調整。風速で柱のしなりとノイズスクロールを制御し嵐のダイナミクスを反映。
+## 天気ごとの 3D オブジェクト実装状況（r3f）
+- **クリアスフィア（weathercode 0–1）**: ✅ `SphereGeometry` + 直接FBMシェーダー。気温で色相変化、風速で動きの速度とスケールを制御。ライティング付きで立体感を演出。
+- **曇りシェーダー球体（weathercode 2–4, 45, 48）**: ✅ `SphereGeometry` + 曇りシェーダー（128分割高解像度）。気温・風速でノイズパターンと色調を動的変化。
+- **雨シェーダー球体（weathercode 51–67, 80–82）**: ✅ `SphereGeometry` + 雨シェーダー（128分割高解像度）。降水感を表現する専用シェーダー実装。
+- **雪シェーダートーラス（weathercode 71–77, 85–86）**: ✅ `TorusKnotGeometry` + 雪シェーダー。結晶的な形状で雪の特徴を表現。
+- **雷シェーダー球体（weathercode 95–99）**: ✅ `SphereGeometry` + 雷シェーダー（128分割高解像度）。稲妻エフェクトとフラッシュ演出。
 
 ## 統合天気予報アプリの要件と実装計画
 
@@ -90,9 +96,9 @@
    - `WeatherThreeScene` による背景シェーダ（気温・降水確率・風速反映）
    - UIでの数値表示（気温・降水確率・風速・天気コード）
 
-2. **`/fbo-example`**: 3Dオブジェクト（Sphere）表示
-   - `MappedSphereFBO` によるFBOテクスチャマッピング
-   - 手動温度入力によるシェーダ制御
+2. ~~**`/fbo-example`**: 3Dオブジェクト（Sphere）表示~~ → **直接実装へ移行完了**
+   - ~~`MappedSphereFBO` によるFBOテクスチャマッピング~~ → `ClearSphere3D`で直接シェーダー実装
+   - ~~手動温度入力によるシェーダ制御~~ → メインアプリに統合済み
 
 3. **`/three`**: 基本的なThree.jsデモ（回転ボックス）
 
