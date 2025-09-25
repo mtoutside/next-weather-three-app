@@ -4,7 +4,7 @@ import React, { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { fragmentShader as fbmFragment, vertexShader as fbmVertex } from '../shaders/fbm';
 import { createFbmUniforms, smoothFollow } from '../hooks/useShaderFBOTexture';
-import { useShaderFBOTexture } from '../hooks/useShaderFBOTexture';
+import { sphereVertexShader, sphereFbmFragmentShader } from '../shaders/sphereFbm';
 import { resolveWeatherObjectKind } from '../lib/weatherObjectKind';
 import type { Group } from 'three';
 import RainShaderSphere from './RainShaderSphere';
@@ -54,20 +54,37 @@ export function BackgroundShaderPlane({
 
 // クリアスフィア（晴れ・快晴用）
 function ClearSphere3D({ temp01 = 0.5, wind01 = 0 }: { temp01?: number; wind01?: number }) {
-  const tex = useShaderFBOTexture({ temp01, wind01, base: 256, max: 512 });
   const groupRef = useRef<Group>(null);
+
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uTemp: { value: temp01 ?? 0.5 },
+      uWind: { value: wind01 ?? 0 },
+    }),
+    [],
+  );
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     groupRef.current.rotation.y += 0.15 * delta;
     groupRef.current.rotation.x = 0.1 + (temp01 ?? 0.5) * 0.2;
+
+    // uniforms更新
+    uniforms.uTime.value += delta;
+    uniforms.uTemp.value = smoothFollow(uniforms.uTemp.value, temp01 ?? 0.5, 0.05);
+    uniforms.uWind.value = smoothFollow(uniforms.uWind.value, wind01 ?? 0, 0.08);
   });
 
   return (
     <group ref={groupRef} position={[0, 0, 5.5]} renderOrder={1}>
       <mesh>
         <sphereGeometry args={[1.5, 48, 48]} />
-        <meshStandardMaterial map={tex} roughness={0.2} metalness={0.2} />
+        <shaderMaterial
+          uniforms={uniforms}
+          vertexShader={sphereVertexShader}
+          fragmentShader={sphereFbmFragmentShader}
+        />
       </mesh>
     </group>
   );
