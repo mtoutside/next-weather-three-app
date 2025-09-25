@@ -2,8 +2,8 @@
 
 import React, { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { fragmentShader as fbmFragment, vertexShader as fbmVertex } from '../shaders/fbm';
-import { createFbmUniforms, smoothFollow } from '../hooks/useShaderFBOTexture';
 import { sphereVertexShader, sphereFbmFragmentShader } from '../shaders/sphereFbm';
 import { resolveWeatherObjectKind } from '../lib/weatherObjectKind';
 import type { Group } from 'three';
@@ -11,6 +11,31 @@ import RainShaderSphere from './RainShaderSphere';
 import CloudyShaderSphere from './CloudyShaderSphere';
 import SnowShaderTorusKnot from './SnowShaderTorusKnot';
 import ThunderShaderSphere from './ThunderShaderSphere';
+
+type WeatherUniformName = 'uTime' | 'uTemp' | 'uWind';
+export type WeatherUniforms = Record<WeatherUniformName, THREE.IUniform<number>>;
+
+function createUniform(value: number): THREE.IUniform<number> {
+  return { value };
+}
+
+export function createFbmUniforms({
+  temp01 = 0.5,
+  wind01 = 0,
+}: {
+  temp01?: number;
+  wind01?: number;
+} = {}): WeatherUniforms {
+  return {
+    uTime: createUniform(0),
+    uTemp: createUniform(temp01),
+    uWind: createUniform(wind01),
+  } satisfies WeatherUniforms;
+}
+
+export function smoothFollow(current: number, target: number, alpha = 0.05) {
+  return current + (target - current) * alpha;
+}
 
 // 背景シェーダープレーン（深度書き込み無効）
 export function BackgroundShaderPlane({
